@@ -1,0 +1,371 @@
+@import url('https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400..900;1,400..900&family=Outfit:wght@100..900&family=Inter:wght@400;500;700&display=swap');
+@import "tailwindcss";
+
+@theme {
+  /* ─── Aura Design System: Luxury Futuristic Tokens ─── */
+  --color-earth-clay: #a0522d;
+  --color-sienna: #8b4513;
+  --color-terracotta: #e2725b;
+  --color-vanilla: #fdfbf7;
+  --color-sand: #d2b48c;
+  --color-charcoal: #1a1a1a;
+  --color-obsidian: #0a0a0a;
+  --color-ivory: #fdfbf7;
+
+  /* Brand Mapping */
+  --color-brand-primary: var(--color-earth-clay);
+  --color-brand-accent: var(--color-terracotta);
+  --color-brand-surface: var(--color-obsidian);
+
+  /* Glass Layer Tokens */
+  --color-glass-white: rgba(255, 255, 255, 0.05);
+  --color-glass-border: rgba(255, 255, 255, 0.08);
+  --color-glass-glow: rgba(160, 82, 45, 0.12);
+
+  /* Typography */
+  --font-sans: "Outfit", "Inter", system-ui, sans-serif;
+  --font-serif: "Playfair Display", serif;
+
+  /* Standardized Spacing (Mobile-First Rhythm) */
+  --spacing-xs: 0.5rem;    /* 8px */
+  --spacing-sm: 0.75rem;   /* 12px */
+  --spacing-md: 1rem;      /* 16px */
+  --spacing-lg: 1.5rem;    /* 24px */
+  --spacing-xl: 2.5rem;    /* 40px */
+  --spacing-section: clamp(4rem, 10vw, 8rem);
+
+  /* Container Widths */
+  --max-width-mobile: 95%;
+  --max-width-tablet: 90%;
+  --max-width-desktop: 1280px;
+
+  /* Standardized Radii */
+  --radius-sm: 0.5rem;     /* 8px */
+  --radius-md: 0.875rem;   /* 14px */
+  --radius-lg: 1.25rem;    /* 20px */
+  --radius-xl: 1.75rem;    /* 28px */
+  --radius-2xl: 2.25rem;   /* 36px */
+  --radius-pill: 9999px;
+}
+
+/* ──────────────────────────────────────
+   BASE LAYER
+────────────────────────────────────── */
+html {
+  scroll-behavior: smooth;
+  -webkit-tap-highlight-color: transparent;
+}
+
+@layer base {
+  body {
+    @apply bg-obsidian text-slate-300 font-sans antialiased overflow-x-hidden;
+    background: radial-gradient(ellipse at top left, #1a1005, #0a0a0a 60%);
+    image-rendering: -webkit-optimize-contrast;
+  }
+
+  h1, h2 {
+    @apply text-ivory tracking-tight font-serif;
+    letter-spacing: -0.02em;
+  }
+
+  h3, h4, h5, h6 {
+    @apply text-ivory tracking-tight font-sans;
+  }
+
+  /* Standardized focus ring */
+  *:focus-visible {
+    @apply outline-none ring-2 ring-earth-clay/40 ring-offset-2 ring-offset-obsidian rounded-lg;
+  }
+
+  /* ── Fluid Typography Scale (Mobile-First Optimized) ── */
+  .display-title {
+    @apply font-black leading-[1.1] sm:leading-[0.95] tracking-tight sm:tracking-tighter;
+    font-size: clamp(2.25rem, 10vw, 7.5rem);
+  }
+  .page-title {
+    @apply font-black leading-none tracking-tight;
+    font-size: clamp(1.5rem, 5vw, 3.5rem);
+  }
+  .section-title {
+    @apply font-black leading-tight;
+    font-size: clamp(1.1rem, 3.5vw, 1.875rem);
+  }
+  .body-text {
+    @apply text-[13px] sm:text-sm font-medium leading-relaxed;
+    color: rgba(148, 163, 184, 0.85);
+  }
+  .label-text {
+    @apply text-[8px] sm:text-[9px] font-black uppercase tracking-[0.25em] sm:tracking-[0.3em] text-earth-clay;
+  }
+}
+
+/* ──────────────────────────────────────
+   UTILITY LAYER
+────────────────────────────────────── */
+@layer utilities {
+  /* Safe area padding for mobile notch/home bar */
+  .pb-safe-area { padding-bottom: env(safe-area-inset-bottom, 20px); }
+  .pt-safe-area { padding-top: env(safe-area-inset-top, 20px); }
+  .px-safe-area {
+    padding-left: env(safe-area-inset-left, 0px);
+    padding-right: env(safe-area-inset-right, 0px);
+  }
+
+  /* Touch target — WCAG 2.5.5 minimum 44px */
+  .touch-target {
+    @apply min-h-[44px] min-w-[44px] flex items-center justify-center;
+  }
+
+  /* Text utilities */
+  .text-glow { text-shadow: 0 0 20px rgba(160, 82, 45, 0.35); }
+  .box-glow  { box-shadow: 0 0 40px rgba(160, 82, 45, 0.12); }
+
+  /* Truncate for table cells */
+  .cell-truncate {
+    @apply truncate max-w-0 w-full;
+  }
+}
+
+/* ──────────────────────────────────────
+   COMPONENT LAYER
+────────────────────────────────────── */
+@layer components {
+
+  /* ── Aura Glassmorphism System (Mobile Optimized) ── */
+  .aura-glass {
+    background: rgba(255, 255, 255, 0.03);
+    backdrop-filter: blur(12px) saturate(160%);
+    -webkit-backdrop-filter: blur(12px) saturate(160%);
+    border: 1px solid rgba(255, 255, 255, 0.06);
+    border-radius: var(--radius-lg);
+    box-shadow: 0 4px 16px -1px rgba(0, 0, 0, 0.2);
+  }
+
+  @media (min-width: 768px) {
+    .aura-glass {
+      backdrop-filter: blur(24px) saturate(180%);
+      -webkit-backdrop-filter: blur(24px) saturate(180%);
+      border: 1px solid rgba(255, 255, 255, 0.08);
+      border-radius: var(--radius-2xl);
+    }
+  }
+
+  .aura-glass-heavy {
+    background: rgba(255, 255, 255, 0.05);
+    backdrop-filter: blur(20px) saturate(180%);
+    -webkit-backdrop-filter: blur(20px) saturate(180%);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    border-radius: var(--radius-xl);
+    box-shadow: 0 10px 30px -5px rgba(0, 0, 0, 0.3);
+  }
+
+  @media (min-width: 768px) {
+    .aura-glass-heavy {
+      background: rgba(255, 255, 255, 0.09);
+      backdrop-filter: blur(40px) saturate(200%);
+      -webkit-backdrop-filter: blur(40px) saturate(200%);
+      border: 1px solid rgba(255, 255, 255, 0.15);
+      border-radius: var(--radius-2xl);
+      box-shadow: 0 20px 60px -10px rgba(0, 0, 0, 0.4);
+    }
+  }
+
+  /* ── Standard Select Field (matches Input) ── */
+  .select-field {
+    width: 100%;
+    background: rgba(255, 255, 255, 0.05);
+    backdrop-filter: blur(16px);
+    border: 1px solid rgba(255, 255, 255, 0.08);
+    border-radius: 1rem;
+    padding: 1.25rem 2.5rem 1.25rem 1.5rem;
+    color: #fdfbf7;
+    font-weight: 600;
+    font-size: 0.875rem;
+    font-family: var(--font-sans);
+    outline: none;
+    appearance: none;
+    -webkit-appearance: none;
+    transition: border-color 0.25s, box-shadow 0.25s;
+    box-shadow: inset 0 2px 4px rgba(0,0,0,0.2);
+    background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 20 20'%3e%3cpath stroke='%23a0522d' stroke-linecap='round' stroke-linejoin='round' stroke-width='1.5' d='M6 8l4 4 4-4'/%3e%3c/svg%3e");
+    background-position: right 1rem center;
+    background-repeat: no-repeat;
+    background-size: 1.5em 1.5em;
+  }
+
+  .select-field:focus {
+    border-color: rgba(160, 82, 45, 0.35);
+    box-shadow: 0 0 0 3px rgba(160, 82, 45, 0.1), inset 0 2px 4px rgba(0,0,0,0.2);
+  }
+
+  .select-field option {
+    background-color: #0a0a0a;
+    color: #fdfbf7;
+  }
+
+  /* ── Standard Input Field ── */
+  .input-field {
+    width: 100%;
+    background: rgba(255, 255, 255, 0.05);
+    backdrop-filter: blur(16px);
+    border: 1px solid rgba(255, 255, 255, 0.08);
+    border-radius: 1rem;
+    padding: 1.25rem 1.5rem;
+    color: #fdfbf7;
+    font-weight: 600;
+    font-size: 0.875rem;
+    font-family: var(--font-sans);
+    outline: none;
+    transition: border-color 0.25s, box-shadow 0.25s;
+    box-shadow: inset 0 2px 4px rgba(0,0,0,0.2);
+  }
+
+  .input-field::placeholder {
+    color: #475569;
+    font-weight: 500;
+  }
+
+  .input-field:focus {
+    border-color: rgba(160, 82, 45, 0.35);
+    box-shadow: 0 0 0 3px rgba(160, 82, 45, 0.1), inset 0 2px 4px rgba(0,0,0,0.2);
+  }
+
+  /* ── Standard Page Header Panel ── */
+  .page-header {
+    background: rgba(255, 255, 255, 0.04);
+    backdrop-filter: blur(24px) saturate(180%);
+    -webkit-backdrop-filter: blur(24px) saturate(180%);
+    border: 1px solid rgba(255, 255, 255, 0.08);
+    border-radius: var(--radius-2xl);
+    padding: 2rem;
+    display: flex;
+    flex-direction: column;
+    gap: 2rem;
+    box-shadow: 0 4px 24px -2px rgba(0, 0, 0, 0.25);
+  }
+
+  @media (min-width: 1024px) {
+    .page-header {
+      flex-direction: row;
+      align-items: center;
+      justify-content: space-between;
+      padding: 3rem;
+    }
+  }
+
+  /* ── Page Header Left Side Content ── */
+  .page-header-meta {
+    display: flex;
+    flex-direction: column;
+    gap: 0.75rem;
+  }
+
+  /* ── Status Dot (live indicator) ── */
+  .status-dot-live {
+    @apply w-2.5 h-2.5 rounded-full bg-earth-clay;
+    animation: pulse-glow 2s ease-in-out infinite;
+  }
+  .status-dot-success {
+    @apply w-2.5 h-2.5 rounded-full bg-emerald-500;
+    animation: pulse-glow-green 2s ease-in-out infinite;
+  }
+
+  /* ── Cinematic Ambient Glow Background ── */
+  .wellness-aura {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100vw;
+    height: 100vh;
+    z-index: -1;
+    pointer-events: none;
+    overflow: hidden;
+    background: var(--color-obsidian);
+  }
+
+  .wellness-aura::before,
+  .wellness-aura::after {
+    content: '';
+    position: absolute;
+    width: 80vmax;
+    height: 80vmax;
+    border-radius: 50%;
+    filter: blur(80px);
+    opacity: 0.12;
+    will-change: transform, opacity;
+    animation: aura-move 50s infinite alternate-reverse ease-in-out;
+  }
+
+  .wellness-aura::before {
+    background: radial-gradient(circle, var(--color-earth-clay) 0%, transparent 70%);
+    top: -20%;
+    left: -20%;
+  }
+
+  .wellness-aura::after {
+    background: radial-gradient(circle, var(--color-terracotta) 0%, transparent 70%);
+    bottom: -20%;
+    right: -20%;
+    animation-delay: -25s;
+  }
+
+  /* ── Premium Scrollbar ── */
+  .premium-scrollbar {
+    scrollbar-width: thin;
+    scrollbar-color: rgba(160, 82, 45, 0.2) transparent;
+  }
+
+  .premium-scrollbar::-webkit-scrollbar { width: 3px; }
+  .premium-scrollbar::-webkit-scrollbar-track { background: transparent; }
+  .premium-scrollbar::-webkit-scrollbar-thumb {
+    background: rgba(160, 82, 45, 0.25);
+    border-radius: 999px;
+  }
+  .premium-scrollbar::-webkit-scrollbar-thumb:hover {
+    background: rgba(160, 82, 45, 0.5);
+  }
+
+  /* ── Satin Shimmer Overlay ── */
+  .satin-shimmer {
+    background: linear-gradient(
+      105deg,
+      rgba(255, 255, 255, 0) 0%,
+      rgba(255, 255, 255, 0.35) 50%,
+      rgba(255, 255, 255, 0) 100%
+    );
+    background-size: 200% 200%;
+    animation: satin 8s infinite linear;
+  }
+
+  /* ── Keyframes ── */
+  @keyframes aura-move {
+    0%   { transform: translate(0, 0) scale(1); }
+    50%  { transform: translate(8%, 4%) scale(1.08); }
+    100% { transform: translate(-4%, 8%) scale(0.92); }
+  }
+
+  @keyframes satin {
+    0%   { background-position: -200% -200%; }
+    100% { background-position: 200% 200%; }
+  }
+
+  @keyframes pulse-glow {
+    0%, 100% { box-shadow: 0 0 6px rgba(160, 82, 45, 0.6); opacity: 1; }
+    50%       { box-shadow: 0 0 14px rgba(160, 82, 45, 1); opacity: 0.7; }
+  }
+
+  @keyframes pulse-glow-green {
+    0%, 100% { box-shadow: 0 0 6px rgba(16, 185, 129, 0.6); opacity: 1; }
+    50%       { box-shadow: 0 0 14px rgba(16, 185, 129, 1); opacity: 0.7; }
+  }
+
+  @keyframes shimmer-in {
+    0%   { opacity: 0; transform: translateY(6px); }
+    100% { opacity: 1; transform: translateY(0); }
+  }
+
+  @keyframes slide-up {
+    0%   { opacity: 0; transform: translateY(12px); }
+    100% { opacity: 1; transform: translateY(0); }
+  }
+}
