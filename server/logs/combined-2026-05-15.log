@@ -1,0 +1,48 @@
+{"level":"info","message":"Initializing Automation Workers (Cron)...","service":"gym-saas-api","timestamp":"2026-05-15 15:34:42"}
+{"level":"info","message":"All Background Workers Scheduled.","service":"gym-saas-api","timestamp":"2026-05-15 15:34:42"}
+{"level":"info","message":"System Operational on Node Hub: 5000","service":"gym-saas-api","timestamp":"2026-05-15 15:34:43"}
+{"level":"warn","message":"Infrastructure Alert: Redis is offline. Background workers (Sync/Notifications) are suspended.","service":"gym-saas-api","timestamp":"2026-05-15 15:34:43"}
+{"duration":"1905ms","ip":"::1","level":"warn","message":"[PERF_ALERT] Slow Request: POST /api/auth/login","method":"POST","service":"gym-saas-api","status":200,"timestamp":"2026-05-15 15:35:03","url":"/api/auth/login","user":"anonymous"}
+{"level":"info","message":"Socket Connected: User fc140650-8fca-4dd8-9acc-87a688cab169 joined room gym_59122b66-f9e4-4ad7-a189-e5cb3c52d478","service":"gym-saas-api","timestamp":"2026-05-15 15:35:03"}
+{"duration":"1210ms","ip":"::1","level":"warn","message":"[PERF_ALERT] Slow Request: GET /api/reports/dashboard","method":"GET","service":"gym-saas-api","status":304,"timestamp":"2026-05-15 15:35:04","url":"/api/reports/dashboard","user":"fc140650-8fca-4dd8-9acc-87a688cab169"}
+{"duration":"1147ms","ip":"::1","level":"warn","message":"[PERF_ALERT] Slow Request: GET /api/reports/dashboard","method":"GET","service":"gym-saas-api","status":304,"timestamp":"2026-05-15 15:35:05","url":"/api/reports/dashboard","user":"fc140650-8fca-4dd8-9acc-87a688cab169"}
+{"duration":"292ms","ip":"::1","level":"info","message":"GET /api/members - 304","method":"GET","service":"gym-saas-api","status":304,"timestamp":"2026-05-15 15:35:12","url":"/api/members","user":"fc140650-8fca-4dd8-9acc-87a688cab169"}
+{"duration":"151ms","ip":"::1","level":"info","message":"GET /api/payments - 304","method":"GET","service":"gym-saas-api","status":304,"timestamp":"2026-05-15 15:35:14","url":"/api/payments","user":"fc140650-8fca-4dd8-9acc-87a688cab169"}
+{"duration":"145ms","ip":"::1","level":"info","message":"GET /api/payments - 304","method":"GET","service":"gym-saas-api","status":304,"timestamp":"2026-05-15 15:35:14","url":"/api/payments","user":"fc140650-8fca-4dd8-9acc-87a688cab169"}
+{"duration":"1140ms","ip":"::1","level":"warn","message":"[PERF_ALERT] Slow Request: GET /api/plans","method":"GET","service":"gym-saas-api","status":304,"timestamp":"2026-05-15 15:35:15","url":"/api/plans","user":"fc140650-8fca-4dd8-9acc-87a688cab169"}
+{"duration":"1201ms","ip":"::1","level":"warn","message":"[PERF_ALERT] Slow Request: GET /api/members?limit=200","method":"GET","service":"gym-saas-api","status":304,"timestamp":"2026-05-15 15:35:15","url":"/api/members?limit=200","user":"fc140650-8fca-4dd8-9acc-87a688cab169"}
+{"duration":"156ms","ip":"::1","level":"info","message":"GET /api/plans - 304","method":"GET","service":"gym-saas-api","status":304,"timestamp":"2026-05-15 15:35:15","url":"/api/plans","user":"fc140650-8fca-4dd8-9acc-87a688cab169"}
+{"duration":"280ms","ip":"::1","level":"info","message":"GET /api/members?limit=200 - 304","method":"GET","service":"gym-saas-api","status":304,"timestamp":"2026-05-15 15:35:15","url":"/api/members?limit=200","user":"fc140650-8fca-4dd8-9acc-87a688cab169"}
+{"duration":"144ms","ip":"::1","level":"info","message":"GET /api/plans - 304","method":"GET","service":"gym-saas-api","status":304,"timestamp":"2026-05-15 15:35:23","url":"/api/plans","user":"fc140650-8fca-4dd8-9acc-87a688cab169"}
+{"duration":"141ms","ip":"::1","level":"info","message":"GET /api/plans - 304","method":"GET","service":"gym-saas-api","status":304,"timestamp":"2026-05-15 15:35:23","url":"/api/plans","user":"fc140650-8fca-4dd8-9acc-87a688cab169"}
+{"duration":"1110ms","ip":"::1","level":"warn","message":"[PERF_ALERT] Slow Request: GET /api/reports/dashboard","method":"GET","service":"gym-saas-api","status":304,"timestamp":"2026-05-15 15:35:25","url":"/api/reports/dashboard","user":"fc140650-8fca-4dd8-9acc-87a688cab169"}
+{"duration":"1118ms","ip":"::1","level":"warn","message":"[PERF_ALERT] Slow Request: GET /api/reports/dashboard","method":"GET","service":"gym-saas-api","status":304,"timestamp":"2026-05-15 15:35:27","url":"/api/reports/dashboard","user":"fc140650-8fca-4dd8-9acc-87a688cab169"}
+{"level":"info","message":"Socket Disconnected: User fc140650-8fca-4dd8-9acc-87a688cab169","service":"gym-saas-api","timestamp":"2026-05-15 15:35:28"}
+{"level":"info","message":"Initializing Automation Workers (Cron)...","service":"gym-saas-api","timestamp":"2026-05-15 15:38:54"}
+{"level":"info","message":"All Background Workers Scheduled.","service":"gym-saas-api","timestamp":"2026-05-15 15:38:54"}
+{"level":"info","message":"System Operational on Node Hub: 5000","service":"gym-saas-api","timestamp":"2026-05-15 15:38:54"}
+{"level":"warn","message":"Infrastructure Alert: Redis is offline. Background workers (Sync/Notifications) are suspended.","service":"gym-saas-api","timestamp":"2026-05-15 15:38:54"}
+{"level":"info","message":"Initializing Automation Workers (Cron)...","service":"gym-saas-api","timestamp":"2026-05-15 15:38:56"}
+{"level":"info","message":"All Background Workers Scheduled.","service":"gym-saas-api","timestamp":"2026-05-15 15:38:56"}
+{"level":"info","message":"System Operational on Node Hub: 5000","service":"gym-saas-api","timestamp":"2026-05-15 15:38:56"}
+{"level":"warn","message":"Infrastructure Alert: Redis is offline. Background workers (Sync/Notifications) are suspended.","service":"gym-saas-api","timestamp":"2026-05-15 15:38:56"}
+{"level":"info","message":"Initializing Automation Workers (Cron)...","service":"gym-saas-api","timestamp":"2026-05-15 15:41:24"}
+{"level":"info","message":"All Background Workers Scheduled.","service":"gym-saas-api","timestamp":"2026-05-15 15:41:24"}
+{"level":"info","message":"System Operational on Node Hub: 5000","service":"gym-saas-api","timestamp":"2026-05-15 15:41:24"}
+{"level":"warn","message":"Infrastructure Alert: Redis is offline. Background workers (Sync/Notifications) are suspended.","service":"gym-saas-api","timestamp":"2026-05-15 15:41:24"}
+{"level":"info","message":"Initializing Automation Workers (Cron)...","service":"gym-saas-api","timestamp":"2026-05-15 15:41:37"}
+{"level":"info","message":"All Background Workers Scheduled.","service":"gym-saas-api","timestamp":"2026-05-15 15:41:37"}
+{"level":"info","message":"System Operational on Node Hub: 5000","service":"gym-saas-api","timestamp":"2026-05-15 15:41:37"}
+{"level":"warn","message":"Infrastructure Alert: Redis is offline. Background workers (Sync/Notifications) are suspended.","service":"gym-saas-api","timestamp":"2026-05-15 15:41:37"}
+{"level":"info","message":"Initializing Automation Workers (Cron)...","service":"gym-saas-api","timestamp":"2026-05-15 15:41:50"}
+{"level":"info","message":"All Background Workers Scheduled.","service":"gym-saas-api","timestamp":"2026-05-15 15:41:50"}
+{"level":"info","message":"System Operational on Node Hub: 5000","service":"gym-saas-api","timestamp":"2026-05-15 15:41:50"}
+{"level":"warn","message":"Infrastructure Alert: Redis is offline. Background workers (Sync/Notifications) are suspended.","service":"gym-saas-api","timestamp":"2026-05-15 15:41:50"}
+{"level":"info","message":"Initializing Automation Workers (Cron)...","service":"gym-saas-api","timestamp":"2026-05-15 15:42:02"}
+{"level":"info","message":"All Background Workers Scheduled.","service":"gym-saas-api","timestamp":"2026-05-15 15:42:02"}
+{"level":"info","message":"System Operational on Node Hub: 5000","service":"gym-saas-api","timestamp":"2026-05-15 15:42:03"}
+{"level":"warn","message":"Infrastructure Alert: Redis is offline. Background workers (Sync/Notifications) are suspended.","service":"gym-saas-api","timestamp":"2026-05-15 15:42:03"}
+{"level":"info","message":"Initializing Automation Workers (Cron)...","service":"gym-saas-api","timestamp":"2026-05-15 16:02:28"}
+{"level":"info","message":"All Background Workers Scheduled.","service":"gym-saas-api","timestamp":"2026-05-15 16:02:28"}
+{"level":"info","message":"System Operational on Node Hub: 5000","service":"gym-saas-api","timestamp":"2026-05-15 16:02:28"}
+{"level":"warn","message":"Infrastructure Alert: Redis is offline. Background workers (Sync/Notifications) are suspended.","service":"gym-saas-api","timestamp":"2026-05-15 16:02:28"}

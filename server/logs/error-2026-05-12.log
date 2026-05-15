@@ -1,0 +1,1 @@
+{"level":"error","message":"Analytics Refresh Failed: column \"total_active_members\" of relation \"daily_stats\" does not exist","service":"gym-saas-api","timestamp":"2026-05-12 18:00:02"}
