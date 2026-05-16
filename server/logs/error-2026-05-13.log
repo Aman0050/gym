@@ -1,2 +1,0 @@
-{"error":"jwt expired","level":"error","message":"Token verification failed for path /api/reports/dashboard: jwt expired","name":"TokenExpiredError","service":"gym-saas-api","timestamp":"2026-05-13 17:25:45","token":"eyJhbGciOi..."}
-{"error":"jwt expired","level":"error","message":"Token verification failed for path /api/reports/dashboard: jwt expired","name":"TokenExpiredError","service":"gym-saas-api","timestamp":"2026-05-13 17:25:45","token":"eyJhbGciOi..."}
