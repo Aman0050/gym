@@ -106,6 +106,12 @@ const Payments = () => {
   const [isMemberDropdownOpen, setIsMemberDropdownOpen] = useState(false);
   const [memberSearchTerm, setMemberSearchTerm] = useState('');
   
+  // Pagination State
+  const [page, setPage] = useState(1);
+  const [limit] = useState(50);
+  const [totalPages, setTotalPages] = useState(1);
+  const [totalRecords, setTotalRecords] = useState(0);
+  
   // Duplicate Protection State
   const [showDuplicateWarning, setShowDuplicateWarning] = useState(false);
   const [duplicateWarningData, setDuplicateWarningData] = useState(null);
@@ -134,7 +140,7 @@ const Payments = () => {
   const location = useLocation();
   const navigate = useNavigate();
 
-  useEffect(() => { fetchData(); }, []);
+  useEffect(() => { fetchData(); }, [page]);
 
   // Handle auto-opening the payment terminal (e.g. from MembersList Quick Actions)
   useEffect(() => {
@@ -167,12 +173,14 @@ const Payments = () => {
     setLoading(true);
     try {
       const [payRes, memRes, planRes, settingsRes] = await Promise.all([
-        api.get('/payments'),
+        api.get(`/payments?page=${page}&limit=${limit}`),
         api.get('/members?limit=200'),
         api.get('/plans'),
         api.get('/settings').catch(() => ({ data: {} })),
       ]);
-      setPayments(payRes.data);
+      setPayments(payRes.data.payments || payRes.data);
+      setTotalPages(payRes.data.totalPages || 1);
+      setTotalRecords(payRes.data.totalRecords || (payRes.data.payments || payRes.data).length);
       setMembers(memRes.data.members || []);
       setPlans(planRes.data);
       setGymSettings(settingsRes.data);
@@ -246,8 +254,22 @@ const Payments = () => {
     }
   };
 
-  const handleProceedToCheckout = async (e) => {
+  const handleProceedToCheckout = async (e, skipDuplicateCheck = false) => {
     if (e) e.preventDefault();
+
+    if (!skipDuplicateCheck) {
+      const selectedMem = members.find(m => m.id === newPayment.memberId);
+      if (selectedMem && selectedMem.status === 'ACTIVE') {
+        setPendingPayload(buildPayload());
+        setDuplicateWarningData({
+          currentPlan: selectedMem.plan_name || 'Active Plan',
+          expiresAt: selectedMem.valid_until,
+          remainingDays: selectedMem.valid_until ? Math.ceil((new Date(selectedMem.valid_until) - new Date()) / (1000 * 60 * 60 * 24)) : 0
+        });
+        setShowDuplicateWarning(true);
+        return;
+      }
+    }
 
     if (useCustomPricing && newPayment.amount < newPayment.originalPrice * 0.5) {
       setPendingPayload(buildPayload());
@@ -478,6 +500,33 @@ const Payments = () => {
                 </TableRow>
               ))}
             </Table>
+            
+            {/* Pagination Controls */}
+            {totalPages > 1 && (
+              <div className="px-7 py-4 border-t border-white/[0.06] flex items-center justify-between bg-white/[0.01]">
+                <p className="text-[10px] font-black text-slate-500 uppercase tracking-widest">
+                  Showing page {page} of {totalPages}
+                </p>
+                <div className="flex gap-2">
+                  <Button 
+                    variant="secondary" 
+                    className="!py-2 !px-4 !text-[10px]"
+                    disabled={page === 1}
+                    onClick={() => setPage(p => Math.max(1, p - 1))}
+                  >
+                    Previous
+                  </Button>
+                  <Button 
+                    variant="secondary" 
+                    className="!py-2 !px-4 !text-[10px]"
+                    disabled={page === totalPages}
+                    onClick={() => setPage(p => Math.min(totalPages, p + 1))}
+                  >
+                    Next
+                  </Button>
+                </div>
+              </div>
+            )}
           </Card>
         </FadeIn>
 
@@ -1085,9 +1134,11 @@ const Payments = () => {
               </Button>
               <Button
                 variant="danger"
+                disabled={isGeneratingQR}
+                loading={isGeneratingQR}
                 onClick={() => {
                   setShowDuplicateWarning(false);
-                  handleGeneratePayment({ ...pendingPayload, overrideExistingSubscription: true });
+                  handleProceedToCheckout(null, true);
                 }}
                 className="flex-1"
               >

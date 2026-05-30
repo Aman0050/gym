@@ -109,7 +109,7 @@ const apiLimiter = rateLimit({
 
 const authLimiter = rateLimit({
   windowMs: 15 * 60 * 1000,
-  max: process.env.NODE_ENV === 'development' ? 1000 : 10, // Auth: 10 attempts per 15m (Brute-force protection)
+  max: process.env.NODE_ENV === 'development' ? 1000 : 100, // Auth: 100 attempts per 15m (Brute-force protection)
   message: { error: 'Too many login attempts. Please try again after 15 minutes.' }
 });
 

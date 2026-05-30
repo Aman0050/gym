@@ -28,7 +28,13 @@ const globalSearch = async (req, res) => {
     }
     
     // 1. Search Members
-    
+    const membersQuery = `
+      SELECT id, name, phone, 'MEMBER' as type 
+      FROM members 
+      WHERE gym_id = $1 AND (name ILIKE $2 OR phone ILIKE $2)
+      LIMIT 3
+    `;
+
     // 2. Search Plans
     const plansQuery = `
       SELECT id, name, price::text as info, 'PLAN' as type 

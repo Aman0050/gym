@@ -28,6 +28,15 @@ const initPaymentListeners = () => {
         channels: ['IN_APP', 'WHATSAPP']
       });
 
+      // Auto-Record Attendance on Payment (Convenience for front-desk flows)
+      const { recordAttendance } = require('../../services/attendanceService');
+      try {
+        await recordAttendance(memberId, gymId);
+        logger.info(`Auto check-in successful for member ${memberId} after payment.`);
+      } catch (err) {
+        logger.warn(`Auto check-in skipped: ${err.message}`);
+      }
+
     } catch (error) {
       logger.error('Error in Payment Success listener:', error);
     }

@@ -349,7 +349,7 @@ const bulkAction = async (req, res) => {
 
     await db.query('COMMIT');
     res.json({ 
-      message: `Bulk ${action.toLowerCase()} completed`, 
+      message: `Bulk ${(action || '').toLowerCase()} completed`, 
       count: result.rowCount,
       affectedIds: result.rows.map(r => r.id)
     });

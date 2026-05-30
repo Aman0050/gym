@@ -47,8 +47,7 @@ const errorHandler = (err, req, res, next) => {
     success: false,
     status: err.status,
     message: err.message,
-    stack: err.stack,
-    error: err
+    stack: err.stack
   });
 };
 

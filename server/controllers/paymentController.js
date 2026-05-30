@@ -100,17 +100,38 @@ const verifyPayment = async (req, res) => {
 const getPaymentHistory = async (req, res) => {
   const db = require('../config/db');
   const gymId = req.user.gym_id;
+  
+  const page = Math.max(1, parseInt(req.query.page) || 1);
+  const limit = Math.max(1, parseInt(req.query.limit) || 1000000); // Default to huge number for backwards compatibility if no query passed
+  const offset = (page - 1) * limit;
+
   try {
+    const countResult = await db.query(
+      `SELECT COUNT(*) as total FROM payments WHERE gym_id = $1`,
+      [gymId]
+    );
+    const totalRecords = parseInt(countResult.rows[0].total);
+    const totalPages = Math.ceil(totalRecords / limit);
+
     const result = await db.query(
       `SELECT p.*, m.name as member_name, m.phone as member_phone, pl.name as plan_name
        FROM payments p
        JOIN members m ON p.member_id = m.id
        LEFT JOIN plans pl ON p.plan_id = pl.id
        WHERE p.gym_id = $1
-       ORDER BY p.payment_date DESC`,
-      [gymId]
+       ORDER BY p.payment_date DESC
+       LIMIT $2 OFFSET $3`,
+      [gymId, limit, offset]
     );
-    res.json(result.rows);
+
+    res.json({
+      payments: result.rows,
+      page,
+      limit,
+      totalRecords,
+      totalPages,
+      hasMore: page < totalPages
+    });
   } catch (err) {
     res.status(500).json({ error: 'Failed to fetch payments' });
   }

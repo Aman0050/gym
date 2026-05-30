@@ -49,7 +49,7 @@ const Dashboard = () => {
   }, [timeRange]);
 
   useEffect(() => {
-    socket.on(SOCKET_EVENTS.REVENUE_UPDATE, (payload) => {
+    const handleRevenueUpdate = (payload) => {
       setData((prev) => {
         if (!prev) return prev;
         return {
@@ -65,14 +65,13 @@ const Dashboard = () => {
               payment_date: new Date().toISOString(),
               pricing_type: 'STANDARD'
             },
-            ...prev.recentActivity.slice(0, 4),
+            ...(prev.recentActivity || []).slice(0, 4),
           ],
         };
       });
-    });
+    };
 
-    socket.on(SOCKET_EVENTS.PAYMENT_CONFIRMED, (payload) => {
-      // similar handling if distinct from REVENUE_UPDATE
+    const handlePaymentConfirmed = (payload) => {
       setData((prev) => {
         if (!prev) return prev;
         return {
@@ -84,81 +83,83 @@ const Dashboard = () => {
               payment_date: new Date().toISOString(),
               pricing_type: 'STANDARD'
             },
-            ...prev.recentActivity.slice(0, 4),
+            ...(prev.recentActivity || []).slice(0, 4),
           ],
         };
       });
-    });
+    };
 
-    socket.on(SOCKET_EVENTS.ATTENDANCE_UPDATE, (payload) => {
+    const handleAttendanceUpdate = (payload) => {
       setData((prev) => {
         if (!prev) return prev;
-        const currentPresent = prev.summary.attendance?.present || 0;
-        const currentPending = prev.summary.attendance?.pending || 0;
+        const currentPresent = prev.summary?.attendance?.present || 0;
+        const currentPending = prev.summary?.attendance?.pending || 0;
         
         return {
           ...prev,
           summary: {
             ...prev.summary,
             attendance: {
-              ...prev.summary.attendance,
+              ...prev.summary?.attendance,
               present: currentPresent + 1,
               pending: Math.max(0, currentPending - 1),
             }
           }
         };
       });
-    });
+    };
 
-    socket.on(SOCKET_EVENTS.MEMBER_CREATED, (payload) => {
+    const handleMemberCreated = (payload) => {
       setData((prev) => {
         if (!prev) return prev;
         return {
           ...prev,
           summary: {
             ...prev.summary,
-            activeMembers: (prev.summary.activeMembers || 0) + 1,
-            totalMembers: (prev.summary.totalMembers || 0) + 1,
+            activeMembers: (prev.summary?.activeMembers || 0) + 1,
+            totalMembers: (prev.summary?.totalMembers || 0) + 1,
           }
         };
       });
-    });
+    };
 
-    socket.on(SOCKET_EVENTS.MEMBER_UPDATED, (payload) => {
-      // optimistic patch for member updates could go here
-    });
+    const handleMemberUpdated = (payload) => {};
 
-    socket.on(SOCKET_EVENTS.MEMBER_DELETED, (payload) => {
+    const handleMemberDeleted = (payload) => {
       setData((prev) => {
         if (!prev) return prev;
         return {
           ...prev,
           summary: {
             ...prev.summary,
-            activeMembers: Math.max(0, (prev.summary.activeMembers || 0) - 1),
-            totalMembers: Math.max(0, (prev.summary.totalMembers || 0) - 1),
+            activeMembers: Math.max(0, (prev.summary?.activeMembers || 0) - 1),
+            totalMembers: Math.max(0, (prev.summary?.totalMembers || 0) - 1),
           }
         };
       });
-    });
+    };
 
-    socket.on(SOCKET_EVENTS.NEW_NOTIFICATION, (payload) => {
-      // Patch notification state if dashboard maintained it
-    });
+    const handleNewNotification = (payload) => {};
+    const handleBranchStatsUpdated = (payload) => {};
 
-    socket.on(SOCKET_EVENTS.BRANCH_STATS_UPDATED, (payload) => {
-      // Patch branch stats
-    });
+    socket.on(SOCKET_EVENTS.REVENUE_UPDATE, handleRevenueUpdate);
+    socket.on(SOCKET_EVENTS.PAYMENT_CONFIRMED, handlePaymentConfirmed);
+    socket.on(SOCKET_EVENTS.ATTENDANCE_UPDATE, handleAttendanceUpdate);
+    socket.on(SOCKET_EVENTS.MEMBER_CREATED, handleMemberCreated);
+    socket.on(SOCKET_EVENTS.MEMBER_UPDATED, handleMemberUpdated);
+    socket.on(SOCKET_EVENTS.MEMBER_DELETED, handleMemberDeleted);
+    socket.on(SOCKET_EVENTS.NEW_NOTIFICATION, handleNewNotification);
+    socket.on(SOCKET_EVENTS.BRANCH_STATS_UPDATED, handleBranchStatsUpdated);
 
     return () => { 
-      socket.off(SOCKET_EVENTS.REVENUE_UPDATE); 
-      socket.off(SOCKET_EVENTS.ATTENDANCE_UPDATE);
-      socket.off(SOCKET_EVENTS.PAYMENT_CONFIRMED);
-      socket.off(SOCKET_EVENTS.MEMBER_CREATED);
-      socket.off(SOCKET_EVENTS.MEMBER_UPDATED);
-      socket.off(SOCKET_EVENTS.MEMBER_DELETED);
-      socket.off(SOCKET_EVENTS.NEW_NOTIFICATION);
-      socket.off(SOCKET_EVENTS.BRANCH_STATS_UPDATED);
+      socket.off(SOCKET_EVENTS.REVENUE_UPDATE, handleRevenueUpdate); 
+      socket.off(SOCKET_EVENTS.PAYMENT_CONFIRMED, handlePaymentConfirmed);
+      socket.off(SOCKET_EVENTS.ATTENDANCE_UPDATE, handleAttendanceUpdate);
+      socket.off(SOCKET_EVENTS.MEMBER_CREATED, handleMemberCreated);
+      socket.off(SOCKET_EVENTS.MEMBER_UPDATED, handleMemberUpdated);
+      socket.off(SOCKET_EVENTS.MEMBER_DELETED, handleMemberDeleted);
+      socket.off(SOCKET_EVENTS.NEW_NOTIFICATION, handleNewNotification);
+      socket.off(SOCKET_EVENTS.BRANCH_STATS_UPDATED, handleBranchStatsUpdated);
     };
   }, []);
 
@@ -464,7 +465,7 @@ const Dashboard = () => {
                     <ResponsiveContainer width="100%" height="100%" minWidth={0} minHeight={0}>
                       <PieChart>
                         <Pie
-                          data={attendancePieData}
+                          data={attendancePieData || []}
                           cx="50%"
                           cy="50%"
                           innerRadius={60}
@@ -472,7 +473,7 @@ const Dashboard = () => {
                           paddingAngle={5}
                           dataKey="value"
                         >
-                          {attendancePieData.map((entry, index) => (
+                          {(attendancePieData || []).map((entry, index) => (
                             <Cell key={`cell-${index}`} fill={entry.color} />
                           ))}
                         </Pie>
@@ -487,7 +488,7 @@ const Dashboard = () => {
 
                   {/* Indicators Details */}
                   <div className="space-y-4">
-                    {rawAttendanceData.map((item) => (
+                    {(rawAttendanceData || []).map((item) => (
                       <div key={item.name} className="flex items-center justify-between p-3.5 bg-white/[0.02] border border-white/[0.04] rounded-xl hover:bg-white/[0.04] transition-colors duration-200">
                         <div className="flex items-center gap-3">
                           <span className="w-2.5 h-2.5 rounded-full" style={{ backgroundColor: item.color }} />
@@ -526,12 +527,12 @@ const Dashboard = () => {
                 </div>
 
                 <div className="p-6 space-y-4">
-                  {recentActivity.length === 0 ? (
+                  {(!recentActivity || recentActivity.length === 0) ? (
                     <div className="py-8 text-center opacity-30">
                       <p className="text-xs text-slate-500 font-semibold">No recent system activity detected</p>
                     </div>
                   ) : (
-                    recentActivity.map((activity, index) => {
+                    (recentActivity || []).map((activity, index) => {
                       // High-fidelity activity categorization matching standard events
                       const isCheckin = index === 0 || index === 2;
                       const typeLabel = isCheckin ? 'Check-in' : 'Payment';
@@ -627,7 +628,7 @@ const Dashboard = () => {
                             {urgent.length > 0 && (
                               <div className="mb-4">
                                 <h4 className="text-[9px] font-black text-red-400 uppercase tracking-widest mb-2 px-1">Expired / Overdue</h4>
-                                {urgent.map((m, i) => (
+                                {(urgent || []).map((m, i) => (
                                   <div key={`u-${i}`} onClick={() => navigate(`/members/profile/${m.id}`)} className="bg-red-500/5 border border-red-500/20 p-3 rounded-2xl flex items-center justify-between group cursor-pointer mb-2">
                                     <div className="flex items-center gap-3.5 min-w-0">
                                       <div className="w-8 h-8 rounded-xl bg-white/[0.03] border border-white/[0.06] flex items-center justify-center flex-shrink-0">
@@ -655,7 +656,7 @@ const Dashboard = () => {
                             )}
                             <div>
                                 <h4 className="text-[9px] font-black text-amber-500 uppercase tracking-widest mb-2 px-1">Upcoming Renewals</h4>
-                                {upcoming.map((m, i) => {
+                                {(upcoming || []).map((m, i) => {
                                   const daysLeft = Math.ceil((new Date(m.valid_until) - new Date()) / (1000 * 60 * 60 * 24));
                                   return (
                                     <div key={`a-${i}`} onClick={() => navigate(`/members/profile/${m.id}`)} className="bg-white/[0.02] border border-white/[0.04] p-3 rounded-2xl flex items-center justify-between group cursor-pointer mb-2 hover:border-earth-clay/20">
@@ -711,12 +712,12 @@ const Dashboard = () => {
 
                 {/* Payments list */}
                 <div className="p-5 space-y-3 max-h-[350px] overflow-y-auto premium-scrollbar">
-                  {recentActivity.length === 0 ? (
+                  {(!recentActivity || recentActivity.length === 0) ? (
                     <div className="py-12 text-center opacity-30">
                       <p className="text-xs text-slate-500 font-semibold">No recent payments logged</p>
                     </div>
                   ) : (
-                    recentActivity.slice(0, 4).map((a, i) => (
+                    (recentActivity || []).slice(0, 4).map((a, i) => (
                       <div
                         key={i}
                         onClick={() => navigate(`/members/profile/${a.member_id}`)}

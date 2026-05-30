@@ -35,8 +35,8 @@ const SupportDashboard = () => {
     if (filter === 'RESOLVED' && t.status !== 'RESOLVED') return false;
     
     if (search) {
-      const q = search.toLowerCase();
-      return t.gym_name?.toLowerCase().includes(q) || t.title.toLowerCase().includes(q);
+      const q = (search || '').toLowerCase();
+      return (t?.gym_name || '').toLowerCase().includes(q) || (t?.title || '').toLowerCase().includes(q);
     }
     return true;
   });

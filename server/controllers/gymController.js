@@ -116,7 +116,7 @@ const createGymAccount = async (req, res) => {
 
   try {
     // Check gym_id uniqueness
-    const exists = await db.query('SELECT id FROM gym_accounts WHERE gym_id = $1', [gym_id.trim().toLowerCase()]);
+    const exists = await db.query('SELECT id FROM gym_accounts WHERE gym_id = $1', [(gym_id || '').trim().toLowerCase()]);
     if (exists.rows.length > 0) {
       return res.status(409).json({ error: 'This Gym ID is already taken. Please choose another.' });
     }
@@ -132,7 +132,7 @@ const createGymAccount = async (req, res) => {
 
     const result = await db.query(
       'INSERT INTO gym_accounts (branch_id, gym_id, password_hash) VALUES ($1, $2, $3) RETURNING id, branch_id, gym_id, created_at',
-      [branch_id, gym_id.trim().toLowerCase(), password_hash]
+      [branch_id, (gym_id || '').trim().toLowerCase(), password_hash]
     );
 
     logger.info(`Gym account created for branch ${branch_id} with gym_id: ${gym_id}`);
@@ -150,7 +150,7 @@ const checkGymIdAvailability = async (req, res) => {
     return res.status(400).json({ error: 'gym_id must be at least 3 characters' });
   }
   try {
-    const exists = await db.query('SELECT id FROM gym_accounts WHERE gym_id = $1', [gym_id.trim().toLowerCase()]);
+    const exists = await db.query('SELECT id FROM gym_accounts WHERE gym_id = $1', [(gym_id || '').trim().toLowerCase()]);
     res.json({ available: exists.rows.length === 0 });
   } catch (err) {
     res.status(500).json({ error: 'Check failed' });

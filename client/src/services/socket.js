@@ -99,8 +99,14 @@ class SocketService {
     this.socket.on(event, callback);
   }
 
-  off(event) {
-    if (this.socket) this.socket.off(event);
+  off(event, callback) {
+    if (this.socket) {
+      if (callback) {
+        this.socket.off(event, callback);
+      } else {
+        this.socket.off(event);
+      }
+    }
   }
 
   disconnect() {

@@ -110,7 +110,23 @@ const recordAttendance = async (memberId, gymId) => {
   if (intelligence.monthlyVisits > 20) intelligence.alerts.push({ type: 'VIP', message: 'High attendance: VIP Member' });
   if (new Date(member.join_date) > new Date(Date.now() - 7 * 24 * 60 * 60 * 1000)) intelligence.alerts.push({ type: 'NEW', message: 'New Member: Welcome!' });
 
-  // 4. Record Check-in (Using atomic transaction wrapper if needed, but simple INSERT is fine here)
+  // 4. Idempotency Check (Prevent duplicate scans within 5 minutes)
+  const recentCheck = await db.query(
+    `SELECT id FROM attendance 
+     WHERE member_id = $1 AND gym_id = $2 
+     AND check_in_time > NOW() - INTERVAL '5 minutes'`,
+    [member.id, gymId]
+  );
+
+  if (recentCheck.rows.length > 0) {
+    const error = new Error('Attendance already recorded recently.');
+    error.isBlocked = true;
+    error.blockCode = 'DUPLICATE';
+    error.memberData = { ...member, error: 'Attendance already recorded recently.' };
+    throw error;
+  }
+
+  // 5. Record Check-in (Using atomic transaction wrapper if needed, but simple INSERT is fine here)
   const insertResult = await db.query(
     'INSERT INTO attendance (gym_id, member_id) VALUES ($1, $2) RETURNING *',
     [gymId, member.id]

@@ -57,7 +57,7 @@ const formatDate = (value) => {
 const sanitize = (value, fallback = '—') => {
   if (value === null || value === undefined) return fallback;
   const str = String(value).trim().replace(/\s+/g, ' ');
-  if (!str || str.toLowerCase() === 'null' || str.toLowerCase() === 'undefined' || str === 'NaN') {
+  if (!str || String(str).toLowerCase() === 'null' || String(str).toLowerCase() === 'undefined' || str === 'NaN') {
     return fallback;
   }
   return str;
