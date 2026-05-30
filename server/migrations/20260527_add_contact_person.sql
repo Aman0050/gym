@@ -1,0 +1,1 @@
+ALTER TABLE gyms ADD COLUMN IF NOT EXISTS contact_person VARCHAR(255);

@@ -1,0 +1,29 @@
+# Stage 1: Build Frontend
+FROM node:18-alpine AS frontend-builder
+WORKDIR /app/client
+COPY client/package*.json ./
+RUN npm install
+COPY client/ .
+RUN npm run build
+
+# Stage 2: Production Server
+FROM node:18-alpine
+WORKDIR /app
+
+# Install production dependencies for server
+COPY server/package*.json ./server/
+RUN cd server && npm install --production
+
+# Copy built frontend to server's public directory or for serving
+COPY --from=frontend-builder /app/client/dist ./client/dist
+
+# Copy server code
+COPY server/ ./server/
+
+# Environment
+ENV NODE_ENV=production
+ENV PORT=5000
+
+EXPOSE 5000
+
+CMD ["node", "server/server.js"]

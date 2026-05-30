@@ -1,0 +1,26 @@
+/* src/styles/tokens.css */
+:root {
+  /* Gradient */
+  --brand-gradient-start: #12c2e9; /* cyan */
+  --brand-gradient-end:   #2af598; /* green */
+
+  /* Surfaces */
+  --surface-dark:  #0a0a0a;
+  --surface-paper: #121212;
+
+  /* Glassmorphism */
+  --glass-bg: rgba(255,255,255,0.06);
+  --glass-bg-dark: rgba(0,0,0,0.12);
+  --glass-blur: 12px;
+
+  /* Opacity */
+  --opacity-glass: 0.06;
+  --opacity-glass-dark: 0.12;
+}
+
+/* Dark mode overrides (optional, can be toggled via data-theme="dark") */
+[data-theme="dark"] {
+  --surface-dark:  #0a0a0a;
+  --surface-paper: #121212;
+  --glass-bg: var(--glass-bg-dark);
+}
