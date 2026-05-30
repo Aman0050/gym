@@ -700,7 +700,7 @@ const Payments = () => {
                       Payment Method
                     </label>
                     <div className="grid grid-cols-2 gap-3">
-                      {['Cash', 'UPI', 'Card', 'Bank Transfer'].map((method) => (
+                      {['Cash', 'UPI'].map((method) => (
                         <button
                           key={method}
                           type="button"

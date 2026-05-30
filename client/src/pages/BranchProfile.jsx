@@ -15,7 +15,7 @@ import {
   Tooltip, ResponsiveContainer,
 } from 'recharts';
 import toast from 'react-hot-toast';
-import { Card, Button, StatusBadge, Table, TableRow } from '../components/ui';
+import { Card, Button, StatusBadge, Table, TableRow, Modal, Input } from '../components/ui';
 import { FadeIn, PageTransition, AnimatedCounter } from '../components/Animations';
 import { ProfileSkeleton } from '../components/Skeleton';
 
@@ -30,6 +30,12 @@ const BranchProfile = () => {
   const [data, setData] = useState(null);
   const [loading, setLoading] = useState(true);
   const [liveActivities, setLiveActivities] = useState([]);
+  
+  const [showEditModal, setShowEditModal] = useState(false);
+  const [showNotifyModal, setShowNotifyModal] = useState(false);
+  const [editForm, setEditForm] = useState({ name: '', phone: '', address: '', contact_person: '' });
+  const [notifyForm, setNotifyForm] = useState({ title: '', message: '', type: 'IN_APP' });
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
   useEffect(() => {
     fetchProfile();
@@ -76,6 +82,60 @@ const BranchProfile = () => {
         icon: Activity,
         color: 'text-emerald-400'
       }, ...prev].slice(0, 10));
+    }
+  };
+
+  const openEditModal = () => {
+    if (data?.branch) {
+      setEditForm({
+        name: data.branch.name || '',
+        phone: data.branch.phone || '',
+        address: data.branch.address || '',
+        contact_person: data.branch.contact_person || ''
+      });
+      setShowEditModal(true);
+    }
+  };
+
+  const handleEditSubmit = async (e) => {
+    e.preventDefault();
+    setIsSubmitting(true);
+    try {
+      await api.put(`/gyms/${id}`, editForm);
+      toast.success('Branch details updated');
+      setShowEditModal(false);
+      fetchProfile();
+    } catch (err) {
+      toast.error('Failed to update branch');
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
+
+  const handleNotifySubmit = async (e) => {
+    e.preventDefault();
+    setIsSubmitting(true);
+    try {
+      await api.post(`/gyms/${id}/notify`, notifyForm);
+      toast.success('Notification sent to branch');
+      setShowNotifyModal(false);
+      setNotifyForm({ title: '', message: '', type: 'IN_APP' });
+    } catch (err) {
+      toast.error('Failed to send notification');
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
+
+  const handleUpdateStatus = async (status) => {
+    if (status === 'SUSPENDED' && !window.confirm('Are you sure you want to suspend this branch?')) return;
+    
+    try {
+      await api.patch(`/gyms/${id}/status`, { status, reason: status === 'SUSPENDED' ? 'Suspended by admin' : '' });
+      toast.success(`Branch ${status === 'ACTIVE' ? 'reactivated' : 'suspended'} successfully`);
+      fetchProfile();
+    } catch (err) {
+      toast.error('Failed to update branch status');
     }
   };
 
@@ -183,12 +243,12 @@ const BranchProfile = () => {
                 </div>
 
                 <div className="relative z-10 mt-8 pt-6 border-t border-white/[0.06] grid grid-cols-2 gap-3">
-                  <Button variant="secondary" className="w-full text-[10px]" icon={Edit2}>Edit Branch</Button>
-                  <Button variant="secondary" className="w-full text-[10px]" icon={Bell}>Notify</Button>
+                  <Button variant="secondary" className="w-full text-[10px]" icon={Edit2} onClick={openEditModal}>Edit Branch</Button>
+                  <Button variant="secondary" className="w-full text-[10px]" icon={Bell} onClick={() => setShowNotifyModal(true)}>Notify</Button>
                   {branch.saas_subscription_status === 'ACTIVE' ? (
-                    <Button variant="danger" className="w-full col-span-2" icon={ShieldAlert}>Suspend Branch</Button>
+                    <Button variant="danger" className="w-full col-span-2" icon={ShieldAlert} onClick={() => handleUpdateStatus('SUSPENDED')}>Suspend Branch</Button>
                   ) : (
-                    <Button variant="primary" className="w-full col-span-2" icon={CheckCircle}>Reactivate Branch</Button>
+                    <Button variant="primary" className="w-full col-span-2" icon={CheckCircle} onClick={() => handleUpdateStatus('ACTIVE')}>Reactivate Branch</Button>
                   )}
                 </div>
               </Card>
@@ -358,6 +418,61 @@ const BranchProfile = () => {
           </div>
         </div>
       </div>
+
+      {/* Edit Branch Modal */}
+      <Modal
+        isOpen={showEditModal}
+        onClose={() => setShowEditModal(false)}
+        title="Edit Branch Profile"
+        subtitle="Update details for this location"
+        maxWidth="max-w-md"
+      >
+        <form onSubmit={handleEditSubmit} className="space-y-6">
+          <Input label="Branch Name" value={editForm.name} onChange={e => setEditForm({ ...editForm, name: e.target.value })} required />
+          <Input label="Phone" value={editForm.phone} onChange={e => setEditForm({ ...editForm, phone: e.target.value })} required />
+          <Input label="Manager / Contact" value={editForm.contact_person} onChange={e => setEditForm({ ...editForm, contact_person: e.target.value })} />
+          <div className="space-y-3">
+            <label className="label-text ml-2">Address</label>
+            <textarea
+              className="w-full bg-white/5 border border-white/5 rounded-2xl py-3 px-4 text-ivory text-sm font-bold focus:outline-none focus:border-earth-clay/30 transition-all shadow-inner h-24 placeholder:text-slate-600"
+              value={editForm.address}
+              onChange={e => setEditForm({ ...editForm, address: e.target.value })}
+            />
+          </div>
+          <div className="flex gap-4 pt-4">
+            <Button type="button" variant="secondary" className="flex-1" onClick={() => setShowEditModal(false)}>Cancel</Button>
+            <Button type="submit" variant="primary" className="flex-1" loading={isSubmitting}>Save Changes</Button>
+          </div>
+        </form>
+      </Modal>
+
+      {/* Notify Branch Modal */}
+      <Modal
+        isOpen={showNotifyModal}
+        onClose={() => setShowNotifyModal(false)}
+        title="Send Notification"
+        subtitle="Alert the branch manager"
+        maxWidth="max-w-md"
+      >
+        <form onSubmit={handleNotifySubmit} className="space-y-6">
+          <Input label="Notification Title" value={notifyForm.title} onChange={e => setNotifyForm({ ...notifyForm, title: e.target.value })} required placeholder="e.g. Server Maintenance" />
+          <div className="space-y-3">
+            <label className="label-text ml-2">Message</label>
+            <textarea
+              className="w-full bg-white/5 border border-white/5 rounded-2xl py-3 px-4 text-ivory text-sm font-bold focus:outline-none focus:border-earth-clay/30 transition-all shadow-inner h-32 placeholder:text-slate-600"
+              value={notifyForm.message}
+              onChange={e => setNotifyForm({ ...notifyForm, message: e.target.value })}
+              required
+              placeholder="Type your message here..."
+            />
+          </div>
+          <div className="flex gap-4 pt-4">
+            <Button type="button" variant="secondary" className="flex-1" onClick={() => setShowNotifyModal(false)}>Cancel</Button>
+            <Button type="submit" variant="primary" className="flex-1" loading={isSubmitting}>Send Notification</Button>
+          </div>
+        </form>
+      </Modal>
+
     </PageTransition>
   );
 };

@@ -35,6 +35,38 @@ const createGym = async (req, res) => {
   }
 };
 
+const updateGym = async (req, res) => {
+  const { id } = req.params;
+  const { name, phone, address, contact_person } = req.body;
+  try {
+    const result = await db.query(
+      'UPDATE gyms SET name = COALESCE($1, name), phone = COALESCE($2, phone), address = COALESCE($3, address), contact_person = COALESCE($4, contact_person) WHERE id = $5 RETURNING *',
+      [name, phone, address, contact_person, id]
+    );
+    if (result.rows.length === 0) return res.status(404).json({ error: 'Gym not found' });
+    res.json(result.rows[0]);
+  } catch (err) {
+    logger.error('Update gym error:', err);
+    res.status(500).json({ error: 'Failed to update gym' });
+  }
+};
+
+const notifyGym = async (req, res) => {
+  const { id } = req.params;
+  const { title, message, type } = req.body;
+  try {
+    // Check if notification table exists or has gym_id
+    await db.query(
+      "INSERT INTO notifications (gym_id, title, message, type) VALUES ($1, $2, $3, $4)",
+      [id, title, message, type || 'IN_APP']
+    );
+    res.json({ success: true });
+  } catch (err) {
+    logger.error('Notify gym error:', err);
+    res.status(500).json({ error: 'Failed to notify gym' });
+  }
+};
+
 const updateGymStatus = async (req, res) => {
   const { id } = req.params;
   const { status, reason } = req.body; // 'ACTIVE', 'SUSPENDED', 'DISABLED'
@@ -228,4 +260,4 @@ const getGymDetails = async (req, res) => {
   }
 };
 
-module.exports = { getGyms, createGym, updateGymStatus, getGlobalAnalytics, createGymAccount, checkGymIdAvailability, assignManager, getGymDetails };
+module.exports = { getGyms, createGym, updateGymStatus, getGlobalAnalytics, createGymAccount, checkGymIdAvailability, assignManager, getGymDetails, updateGym, notifyGym };
