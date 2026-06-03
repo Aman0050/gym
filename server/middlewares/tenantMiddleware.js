@@ -13,7 +13,7 @@ const checkTenantStatus = async (req, res, next) => {
 
     // Fetch the latest status directly from DB (bypassing any stale cache/token info)
     const result = await db.query(
-      'SELECT saas_subscription_status, suspension_reason, trial_end_date FROM gyms WHERE id = $1',
+      'SELECT saas_subscription_status, suspension_reason FROM gyms WHERE id = $1',
       [gymId]
     );
 
@@ -44,15 +44,6 @@ const checkTenantStatus = async (req, res, next) => {
       });
     }
 
-    if (gym.saas_subscription_status === 'TRIAL') {
-      if (gym.trial_end_date && new Date() > new Date(gym.trial_end_date)) {
-        return res.status(402).json({
-          success: false,
-          code: 'TRIAL_EXPIRED',
-          message: 'Your trial period has ended. Please upgrade your subscription to continue.'
-        });
-      }
-    }
 
     next();
   } catch (err) {

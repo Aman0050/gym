@@ -188,11 +188,7 @@ api.interceptors.response.use(
       }
       
       toast.error('Access denied. You don\'t have permission for this action.');
-    } else if (error.response?.status === 402) {
-      if (window.location.pathname !== '/trial-expired') {
-        window.location.href = '/trial-expired';
-      }
-      return Promise.reject(error);
+
     } else if (error.response?.status === 429) {
       toast.error('Too many requests. Please wait a moment before trying again.');
     }

@@ -319,7 +319,7 @@ const About = () => {
                <div className="flex flex-col sm:flex-row items-center justify-center gap-4 sm:gap-6 mt-12 lg:mt-16">
                  <Link to="/login" className="w-full sm:w-auto group relative px-10 py-5 bg-earth-clay hover:bg-[#b0613a] rounded-xl text-white text-base font-bold transition-all flex justify-center items-center shadow-[0_0_40px_rgba(160,82,45,0.4)] overflow-hidden ring-1 ring-white/20">
                    <div className="absolute inset-0 bg-white/20 translate-y-full group-hover:translate-y-0 transition-transform duration-500 ease-out" />
-                   <span className="relative z-10 flex items-center drop-shadow-md">Start Trial Access <ArrowRight size={16} className="ml-3 group-hover:translate-x-1 transition-transform" /></span>
+                   <span className="relative z-10 flex items-center drop-shadow-md">Access Portal <ArrowRight size={16} className="ml-3 group-hover:translate-x-1 transition-transform" /></span>
                  </Link>
                  <Link to="/contact" className="w-full sm:w-auto group px-10 py-5 bg-white/[0.03] hover:bg-white/[0.08] backdrop-blur-xl border border-white/10 rounded-xl text-white text-base font-bold transition-all flex justify-center items-center shadow-2xl ring-1 ring-white/5">
                    Book Enterprise Demo

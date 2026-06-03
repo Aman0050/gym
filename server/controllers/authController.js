@@ -41,7 +41,7 @@ const login = async (req, res) => {
       }
 
       // Check SaaS subscription
-      if (account.saas_subscription_status !== 'ACTIVE') {
+      if (account.saas_subscription_status !== 'ACTIVE' && account.saas_subscription_status !== 'TRIAL') {
         return res.status(403).json({ error: 'SaaS Subscription is suspended. Please contact support.' });
       }
 
@@ -94,7 +94,7 @@ const login = async (req, res) => {
         return res.status(403).json({ error: 'Associated gym not found' });
       }
       const gym = gymResult.rows[0];
-      if (gym.saas_subscription_status !== 'ACTIVE') {
+      if (gym.saas_subscription_status !== 'ACTIVE' && gym.saas_subscription_status !== 'TRIAL') {
         return res.status(403).json({ error: 'SaaS Subscription is suspended. Please contact support.' });
       }
     }
@@ -203,87 +203,5 @@ const logout = async (req, res) => {
   }
 };
 
-const register = async (req, res) => {
-  const { gymName, ownerName, email, phone, city, password } = req.body;
 
-  try {
-    // 1. Check if email already exists
-    const existingUser = await db.query('SELECT id FROM users WHERE email = $1', [email]);
-    if (existingUser.rows.length > 0) {
-      return res.status(400).json({ error: 'Email is already registered' });
-    }
-
-    const client = await db.pool.connect(); // Note: db module needs pool exported, or we just do multiple queries. Our db wrapper exports `query` and `pool`. Let's assume db.query for simplicity, but a transaction is better.
-    try {
-      await client.query('BEGIN');
-
-      // 2. Create Gym (Start 3-Day Trial)
-      const gymInsert = await client.query(
-        `INSERT INTO gyms (name, phone, address, saas_subscription_status, trial_start_date, trial_end_date) 
-         VALUES ($1, $2, $3, 'TRIAL', NOW(), NOW() + INTERVAL '3 days') RETURNING id, name, phone`,
-        [gymName, phone, city]
-      );
-      const gym = gymInsert.rows[0];
-
-      // 3. Create Admin User
-      const salt = await bcrypt.genSalt(10);
-      const hashedPassword = await bcrypt.hash(password, salt);
-
-      const userInsert = await client.query(
-        `INSERT INTO users (gym_id, email, password_hash, role, name) 
-         VALUES ($1, $2, $3, 'ADMIN', $4) RETURNING id, email, role, name, gym_id`,
-        [gym.id, email, hashedPassword, ownerName]
-      );
-      const user = userInsert.rows[0];
-
-      await client.query('COMMIT');
-
-      // 4. Generate Tokens and Auto-Login
-      const accessToken = generateAccessToken(user.id, user.role, user.gym_id);
-      const refreshToken = generateRefreshToken(user.id, user.role, user.gym_id);
-
-      const expiresAt = new Date();
-      expiresAt.setDate(expiresAt.getDate() + 7);
-
-      await db.query(
-        'INSERT INTO refresh_tokens (user_id, token, expires_at) VALUES ($1, $2, $3)',
-        [user.id, refreshToken, expiresAt]
-      );
-
-      // Mock Welcome Email Logger
-      console.log(`\n========================================================`);
-      console.log(`✉️ WELCOME EMAIL DISPATCHED TO: ${user.email}`);
-      console.log(`Subject: Welcome to FitXeno OS - Your Enterprise Infrastructure`);
-      console.log(`Body: Hi ${user.name},\nWelcome to FitXeno! Your gym ${gym.name} is now online.\nLogin to your dashboard to get started.`);
-      console.log(`========================================================\n`);
-
-      res.status(201).json({
-        success: true,
-        user: {
-          id: user.id,
-          email: user.email,
-          role: user.role,
-          gym_id: user.gym_id,
-          gym_name: gym.name,
-          gym_phone: gym.phone,
-          name: user.name,
-        },
-        accessToken,
-        refreshToken,
-        message: "Welcome to FitXeno. Your enterprise management portal is now active.",
-      });
-
-    } catch (txError) {
-      await client.query('ROLLBACK');
-      console.error('Transaction Error during registration:', txError);
-      return res.status(500).json({ error: 'Server error during registration' });
-    } finally {
-      client.release();
-    }
-  } catch (error) {
-    console.error('Registration error:', error);
-    res.status(500).json({ error: 'Server error during registration' });
-  }
-};
-
-module.exports = { login, refreshToken, logout, register };
+module.exports = { login, refreshToken, logout };

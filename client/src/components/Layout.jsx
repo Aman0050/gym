@@ -14,7 +14,6 @@ import { Toaster } from 'react-hot-toast';
 import QuickSearch from './QuickSearch';
 import MobileActionFAB from './MobileActionFAB';
 import OfflineSyncHub from './OfflineSyncHub';
-import TrialCountdownBanner from './TrialCountdownBanner';
 
 /** Route → human-readable label map */
 const ROUTE_LABELS = {
@@ -162,7 +161,6 @@ const Layout = () => {
 
       {/* ── Main Canvas ── */}
       <main className="flex-1 flex flex-col min-w-0 h-screen overflow-hidden">
-        <TrialCountdownBanner />
 
         {/* Top Intelligence Bar */}
         <header

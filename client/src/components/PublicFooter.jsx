@@ -22,12 +22,6 @@ const PublicFooter = () => {
             <p className="body-text !text-[11px] mb-6">
               The enterprise-grade operating system for modern luxury fitness brands.
             </p>
-            <div className="flex items-center gap-4 text-white/40">
-               {/* Social placeholders if needed */}
-               <Globe size={18} className="hover:text-earth-clay cursor-pointer transition-colors" />
-               <Users size={18} className="hover:text-earth-clay cursor-pointer transition-colors" />
-               <Target size={18} className="hover:text-earth-clay cursor-pointer transition-colors" />
-            </div>
           </div>
           
           <div>

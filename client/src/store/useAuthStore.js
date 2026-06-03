@@ -41,6 +41,7 @@ export const useAuthStore = create(
         localStorage.removeItem('accessToken');
         localStorage.removeItem('refreshToken');
         localStorage.removeItem('user-storage');
+        localStorage.removeItem('last_checkin');
         
         try {
           import('../services/socket').then(module => {

@@ -117,13 +117,13 @@ const Plans = () => {
             ))}
           </div>
         ) : plans.length === 0 ? (
-          <FadeIn>
-            <div className="aura-glass p-20 text-center border-dashed border-white/[0.08]">
-              <div className="w-20 h-20 bg-white/[0.04] rounded-full flex items-center justify-center mb-6 mx-auto border border-white/[0.06]">
+          <FadeIn className="w-full flex justify-center">
+            <div className="aura-glass w-full max-w-2xl p-12 lg:p-20 flex flex-col items-center justify-center text-center border-dashed border-white/[0.08] mx-auto">
+              <div className="w-20 h-20 bg-white/[0.04] rounded-full flex items-center justify-center mb-6 border border-white/[0.06]">
                 <Package size={32} className="text-slate-600" />
               </div>
               <h3 className="text-xl font-black text-slate-400 mb-3 tracking-tight">No Plans Yet</h3>
-              <p className="text-sm text-slate-600 font-medium mb-8 max-w-xs mx-auto leading-relaxed">
+              <p className="text-sm text-slate-600 font-medium mb-8 w-full px-4 leading-relaxed">
                 Create your first membership plan to start enrolling members and tracking payments.
               </p>
               <Button variant="primary" icon={Plus} onClick={() => {
