@@ -217,10 +217,10 @@ const register = async (req, res) => {
     try {
       await client.query('BEGIN');
 
-      // 2. Create Gym
+      // 2. Create Gym (Start 3-Day Trial)
       const gymInsert = await client.query(
-        `INSERT INTO gyms (name, phone, address, saas_subscription_status) 
-         VALUES ($1, $2, $3, 'ACTIVE') RETURNING id, name, phone`,
+        `INSERT INTO gyms (name, phone, address, saas_subscription_status, trial_start_date, trial_end_date) 
+         VALUES ($1, $2, $3, 'TRIAL', NOW(), NOW() + INTERVAL '3 days') RETURNING id, name, phone`,
         [gymName, phone, city]
       );
       const gym = gymInsert.rows[0];

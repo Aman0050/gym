@@ -195,6 +195,7 @@ app.use('/api/demo', require('./routes/demoRoutes'));
 app.use('/api/search', require('./routes/searchRoutes'));
 app.use('/api/notifications', require('./routes/notificationRoutes'));
 app.use('/api/settings', require('./routes/settingsRoutes'));
+app.use('/api/subscription', require('./routes/subscriptionRoutes'));
 
 // 6. Operational Health Hub
 app.get(['/health', '/api/health'], async (req, res) => {
