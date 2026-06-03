@@ -14,7 +14,9 @@ const PublicNavbar = () => {
 
   useEffect(() => {
     const handleScroll = () => setScrolled(window.scrollY > 20);
-    window.addEventListener('scroll', handleScroll);
+    window.addEventListener('scroll', handleScroll, { passive: true });
+    // Initialize on mount
+    handleScroll();
     return () => window.removeEventListener('scroll', handleScroll);
   }, []);
 
@@ -63,7 +65,7 @@ const PublicNavbar = () => {
         scrolled ? 'py-3 sm:py-4' : 'py-5 sm:py-8'
       }`}>
         <div className={`absolute inset-0 pointer-events-none transition-all duration-500 ${
-          scrolled ? 'bg-obsidian/80 backdrop-blur-xl border-b border-white/5 opacity-100' : 'opacity-0'
+          scrolled ? 'bg-black/90 backdrop-blur-xl border-b border-white/5 opacity-100' : 'opacity-0'
         }`} />
         
         <div className="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 flex items-center justify-between">

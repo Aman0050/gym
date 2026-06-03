@@ -191,6 +191,7 @@ app.use('/api/gyms', require('./routes/gymRoutes'));
 app.use('/api/attendance', require('./routes/attendanceRoutes'));
 app.use('/api/analytics', require('./routes/analyticsRoutes'));
 app.use('/api/support', require('./routes/supportRoutes'));
+app.use('/api/demo', require('./routes/demoRoutes'));
 app.use('/api/search', require('./routes/searchRoutes'));
 app.use('/api/notifications', require('./routes/notificationRoutes'));
 app.use('/api/settings', require('./routes/settingsRoutes'));

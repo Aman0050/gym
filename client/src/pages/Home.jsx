@@ -12,9 +12,13 @@ import { PageTransition } from '../components/Animations';
 
 import PublicNavbar from '../components/PublicNavbar';
 import PublicFooter from '../components/PublicFooter';
+import FreeTrialModal from '../components/modals/FreeTrialModal';
+import BookDemoModal from '../components/modals/BookDemoModal';
 
 const Home = () => {
   const [billingCycle, setBillingCycle] = useState('monthly');
+  const [isTrialOpen, setIsTrialOpen] = useState(false);
+  const [isDemoOpen, setIsDemoOpen] = useState(false);
 
   const billingOptions = [
     { id: 'monthly', label: 'Monthly', price: '1,999', period: '/mo', savings: null },
@@ -78,11 +82,9 @@ const Home = () => {
                 </p>
 
                 <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-4 sm:gap-6">
-                  <Link to="/login">
-                    <Button variant="primary" className="w-full sm:w-auto !py-5 !px-12">
-                      Start Trial Access
-                    </Button>
-                  </Link>
+                  <Button onClick={() => setIsTrialOpen(true)} variant="primary" className="w-full sm:w-auto !py-5 !px-12 shadow-xl">
+                    Start Trial Access
+                  </Button>
                 </div>
               </motion.div>
 
@@ -283,8 +285,8 @@ const Home = () => {
                         </div>
 
                         <div className="flex flex-col gap-3">
-                           <Button variant="primary" className="w-full !py-4 shadow-xl">Start Trial</Button>
-                           <Button variant="secondary" className="w-full !py-4 border-white/5">Book Demo</Button>
+                           <Button onClick={() => setIsTrialOpen(true)} variant="primary" className="w-full !py-4 shadow-xl">Start Trial</Button>
+                           <Button onClick={() => setIsDemoOpen(true)} variant="secondary" className="w-full !py-4 border-white/5">Book Demo</Button>
                         </div>
                      </div>
 
@@ -308,6 +310,9 @@ const Home = () => {
         </section>
 
         <PublicFooter />
+
+        <FreeTrialModal isOpen={isTrialOpen} onClose={() => setIsTrialOpen(false)} />
+        <BookDemoModal isOpen={isDemoOpen} onClose={() => setIsDemoOpen(false)} />
       </div>
     </PageTransition>
   );
