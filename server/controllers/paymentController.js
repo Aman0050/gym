@@ -1,5 +1,6 @@
 const paymentService = require('../services/paymentService');
 const logger = require('../utils/logger');
+const { del } = require('../services/cacheService');
 
 // ─────────────────────────────────────────────────────────────────────────────
 // POST /api/payments/create-pending
@@ -17,6 +18,10 @@ const createPendingPayment = async (req, res) => {
 
   try {
     const payment = await paymentService.createPendingPayment(req.body, gymId, req.user.id);
+    
+    // Invalidate member profile cache
+    if (payment) await del(gymId, `member_profile:${payment.member_id}`);
+
     res.json({
       success: true,
       message: 'Pending payment created — awaiting confirmation',
@@ -43,6 +48,10 @@ const confirmPayment = async (req, res) => {
 
   try {
     const payment = await paymentService.confirmPayment(paymentId, gymId, transactionReference);
+    
+    // Invalidate member profile cache
+    if (payment) await del(gymId, `member_profile:${payment.member_id}`);
+
     res.json({
       success: true,
       message: 'Payment confirmed — membership activated',
@@ -86,6 +95,10 @@ const verifyPayment = async (req, res) => {
 
   try {
     const payment = await paymentService.verifyAndRecordPayment(req.body, gymId, req.user.id);
+    
+    // Invalidate member profile cache
+    if (payment) await del(gymId, `member_profile:${payment.member_id}`);
+
     res.json({ success: true, message: 'Payment verified and recorded', payment });
   } catch (error) {
     logger.error('Payment verification error:', error);
@@ -102,7 +115,7 @@ const getPaymentHistory = async (req, res) => {
   const gymId = req.user.gym_id;
   
   const page = Math.max(1, parseInt(req.query.page) || 1);
-  const limit = Math.max(1, parseInt(req.query.limit) || 1000000); // Default to huge number for backwards compatibility if no query passed
+  const limit = Math.min(100, Math.max(1, parseInt(req.query.limit) || 20)); // Default to 20, max 100
   const offset = (page - 1) * limit;
 
   try {
@@ -110,7 +123,7 @@ const getPaymentHistory = async (req, res) => {
       `SELECT COUNT(*) as total FROM payments WHERE gym_id = $1`,
       [gymId]
     );
-    const totalRecords = parseInt(countResult.rows[0].total);
+    const totalRecords = parseInt(countResult.rows[0].total || 0);
     const totalPages = Math.ceil(totalRecords / limit);
 
     const result = await db.query(
@@ -125,12 +138,12 @@ const getPaymentHistory = async (req, res) => {
     );
 
     res.json({
-      payments: result.rows,
+      data: result.rows,
+      payments: result.rows, // fallback for legacy safety
       page,
       limit,
-      totalRecords,
       totalPages,
-      hasMore: page < totalPages
+      totalRecords
     });
   } catch (err) {
     res.status(500).json({ error: 'Failed to fetch payments' });

@@ -47,7 +47,7 @@ const BottomNav = ({ onMenuClick }) => {
                   size={20}
                   className={`relative z-10 transition-transform duration-200 ${isActive ? 'scale-105' : ''}`}
                 />
-                <span className="text-[9px] font-black uppercase tracking-[0.15em] relative z-10 leading-none">
+                <span className="text-[8px] sm:text-[9px] font-black uppercase tracking-tight sm:tracking-[0.15em] relative z-10 leading-none truncate max-w-[60px]">
                   {item.name}
                 </span>
                 {isActive && (

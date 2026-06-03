@@ -96,7 +96,7 @@ html {
     color: rgba(148, 163, 184, 0.85);
   }
   .label-text {
-    @apply text-[8px] sm:text-[9px] font-black uppercase tracking-[0.25em] sm:tracking-[0.3em] text-earth-clay;
+    @apply text-[11px] sm:text-xs font-black uppercase tracking-[0.1em] sm:tracking-[0.15em] text-earth-clay;
   }
 }
 
@@ -178,7 +178,7 @@ html {
     backdrop-filter: blur(16px);
     border: 1px solid rgba(255, 255, 255, 0.08);
     border-radius: 1rem;
-    padding: 1.25rem 2.5rem 1.25rem 1.5rem;
+    padding: 1.25rem 3rem 1.25rem 1.5rem;
     color: #fdfbf7;
     font-weight: 600;
     font-size: 0.875rem;
@@ -253,6 +253,12 @@ html {
       justify-content: space-between;
       padding: 3rem;
     }
+  }
+
+  /* ── Safe Non-destructive Mask for Lion Logo ── */
+  .lion-mask {
+    -webkit-mask-image: radial-gradient(circle at 40% 60%, black 50%, transparent 75%);
+    mask-image: radial-gradient(circle at 40% 60%, black 50%, transparent 75%);
   }
 
   /* ── Page Header Left Side Content ── */
@@ -412,27 +418,8 @@ button:active:not(:disabled),
 
 /* Links */
 a {
-  position: relative;
   text-decoration: none;
   cursor: pointer;
-}
-
-a::after {
-  content: '';
-  position: absolute;
-  width: 100%;
-  transform: scaleX(0);
-  height: 2px;
-  bottom: -2px;
-  left: 0;
-  background-color: #C96B3B;
-  transform-origin: bottom right;
-  transition: transform 0.25s ease-out;
-}
-
-a:hover::after {
-  transform: scaleX(1);
-  transform-origin: bottom left;
 }
 
 /* Tables */

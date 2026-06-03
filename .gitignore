@@ -7,3 +7,8 @@ server/node_modules/
 server/logs/
 .vscode/
 dist/
+
+node.zip
+node-v20.14.0-win-x64/
+load-tests/results/*.json
+load-tests/bin/

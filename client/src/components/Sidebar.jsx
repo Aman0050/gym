@@ -1,9 +1,10 @@
+import React, { useState, useEffect } from 'react';
 import { NavLink, useNavigate, useLocation } from 'react-router-dom';
 import {
   LayoutDashboard, Users, CreditCard,
   Calendar, Settings, Shield, Zap,
   BarChart3, Bell, HelpCircle,
-  Building2, X, LifeBuoy
+  Building2, X, LifeBuoy, ServerCrash, Activity
 } from 'lucide-react';
 import logo from '../assets/logo-fitxeno.svg';
 import lionIcon from '../assets/flaming-lion.png';
@@ -12,6 +13,7 @@ import { useNotificationStore } from '../store/useNotificationStore';
 import { useAuthStore } from '../store/useAuthStore';
 import toast from 'react-hot-toast';
 import { transitions } from './ui/transitions';
+import api from '../services/api';
 
 const Sidebar = ({ onNotificationsClick, onSettingsClick, onHelpClick, isOpen, onClose, isMobile }) => {
   const { unreadCount } = useNotificationStore();
@@ -19,6 +21,63 @@ const Sidebar = ({ onNotificationsClick, onSettingsClick, onHelpClick, isOpen, o
   const navigate = useNavigate();
   const location = useLocation();
   const isSuperAdmin = user?.role === 'SUPER_ADMIN';
+
+  const [healthStatus, setHealthStatus] = useState({
+    status: 'OPERATIONAL',
+    message: 'All systems running smoothly',
+    uptimePct: 98,
+    color: 'emerald-400',
+    bgColor: 'emerald-500'
+  });
+
+  useEffect(() => {
+    let isMounted = true;
+    const checkHealth = async () => {
+      try {
+        const start = Date.now();
+        const res = await api.get('/health', { timeout: 5000 });
+        const latency = Date.now() - start;
+        
+        if (!isMounted) return;
+
+        if (res.data.status === 'healthy') {
+          if (latency > 1500) {
+            setHealthStatus({
+              status: 'DEGRADED',
+              message: 'High latency detected',
+              uptimePct: 92,
+              color: 'amber-400',
+              bgColor: 'amber-500'
+            });
+          } else {
+            setHealthStatus({
+              status: 'OPERATIONAL',
+              message: 'All systems running smoothly',
+              uptimePct: 99,
+              color: 'emerald-400',
+              bgColor: 'emerald-500'
+            });
+          }
+        }
+      } catch (error) {
+        if (!isMounted) return;
+        setHealthStatus({
+          status: 'OFFLINE',
+          message: 'Server connection lost',
+          uptimePct: 0,
+          color: 'red-400',
+          bgColor: 'red-500'
+        });
+      }
+    };
+
+    checkHealth();
+    const interval = setInterval(checkHealth, 30000); // Check every 30 seconds
+    return () => {
+      isMounted = false;
+      clearInterval(interval);
+    };
+  }, []);
 
   const menuItems = isSuperAdmin
     ? [
@@ -49,7 +108,7 @@ const Sidebar = ({ onNotificationsClick, onSettingsClick, onHelpClick, isOpen, o
           tabIndex={0}
           aria-label="FitNexo home"
         >
-          <img src={lionIcon} alt="FitXeno Icon" className="h-12 sm:h-16 w-12 sm:w-16 object-contain relative z-10 mb-2 scale-[1.30]" />
+          <img src={lionIcon} alt="FitXeno Icon" className="h-12 sm:h-16 w-12 sm:w-16 object-contain relative z-10 mb-2 scale-[1.30] lion-mask" />
           <img src={logo} alt="FitXeno" className="h-8 sm:h-10 object-contain relative z-10 mb-2 -ml-2 sm:-ml-3" style={{ filter: 'brightness(0.95) contrast(1.05)' }} />
           <div className="hidden">
             <p className="label-text !text-[7px] mt-1 opacity-50">Enterprise Gym Operations Platform</p>
@@ -124,33 +183,34 @@ const Sidebar = ({ onNotificationsClick, onSettingsClick, onHelpClick, isOpen, o
       </nav>
 
       {/* ── Footer ── */}
-      <div className="p-5 border-t border-white/[0.05] space-y-5 flex-shrink-0">
+      <div className="p-5 space-y-5 flex-shrink-0">
         {/* System Status */}
-        <div className="p-5 bg-white/[0.02] rounded-3xl border border-white/[0.05] group cursor-default hover:border-earth-clay/15 transition-all duration-300">
-          <div className="flex items-center justify-between mb-3.5">
+        <div className={`p-5 bg-white/[0.02] rounded-3xl border border-${healthStatus.color}/10 group cursor-default hover:border-${healthStatus.color}/30 transition-all duration-300 relative overflow-hidden`}>
+          {healthStatus.status === 'OFFLINE' && <div className="absolute inset-0 bg-red-500/5 animate-pulse" />}
+          <div className="flex items-center justify-between mb-3.5 relative z-10">
             <div className="flex items-center gap-2">
-              <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse" />
+              <span className={`w-1.5 h-1.5 rounded-full bg-${healthStatus.bgColor} ${healthStatus.status === 'OPERATIONAL' ? 'animate-pulse' : ''}`} />
               <span className="text-[9px] font-black text-slate-400 uppercase tracking-widest">
                 SYSTEM STATUS
               </span>
             </div>
-            <span className="text-[9px] font-black text-emerald-400 uppercase tracking-wider">
-              OPERATIONAL
+            <span className={`text-[9px] font-black text-${healthStatus.color} uppercase tracking-wider whitespace-nowrap`}>
+              {healthStatus.status}
             </span>
           </div>
-          <p className="text-[9px] font-bold text-slate-500 uppercase tracking-wider mb-3 leading-none">
-            All systems running smoothly
+          <p className={`text-[9px] font-bold ${healthStatus.status === 'OFFLINE' ? 'text-red-400' : 'text-slate-500'} uppercase tracking-wider mb-3 leading-none relative z-10`}>
+            {healthStatus.message}
           </p>
-          <div className="w-full h-1 bg-white/[0.05] rounded-full overflow-hidden">
+          <div className="w-full h-1 bg-white/[0.05] rounded-full overflow-hidden relative z-10">
             <motion.div
               initial={{ width: 0 }}
-              animate={{ width: '98%' }}
-              transition={transitions.slow}
-              className="h-full bg-earth-clay shadow-[0_0_8px_rgba(160,82,45,0.8)]"
+              animate={{ width: `${healthStatus.uptimePct}%` }}
+              transition={{ duration: 1, ease: "easeOut" }}
+              className={`h-full bg-${healthStatus.color} shadow-[0_0_8px_currentColor]`}
             />
           </div>
-          <div className="flex items-center justify-between mt-3 text-[8px] font-black text-slate-600 uppercase tracking-widest">
-            <span>98% Operational</span>
+          <div className="flex items-center justify-between mt-3 text-[8px] font-black text-slate-600 uppercase tracking-widest relative z-10">
+            <span>{healthStatus.uptimePct}% Operational</span>
             <span>v5.0 Enterprise</span>
           </div>
         </div>

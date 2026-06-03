@@ -4,36 +4,51 @@ const { eventBus, EVENTS } = require('../events/eventBus');
 const notificationService = require('./notificationService');
 
 const recordAttendance = async (memberId, gymId) => {
-  // 1. Fetch comprehensive member metadata & intelligence in a single high-performance query
+  const isUuid = /^[0-9a-fA-F-]{36}$/.test(memberId);
+  const cleanInput = memberId.toString().replace(/[^0-9]/g, '');
+  const phoneSuffix = cleanInput.length >= 10 ? `%${cleanInput.slice(-10)}` : null;
+
+  let targetFilter = '';
+  let params = [memberId, gymId];
+
+  if (isUuid) {
+    targetFilter = 'id = $1::uuid AND gym_id = $2';
+  } else if (phoneSuffix) {
+    targetFilter = '(phone = $1 OR phone LIKE $3) AND gym_id = $2';
+    params.push(phoneSuffix);
+  } else {
+    targetFilter = 'phone = $1 AND gym_id = $2';
+  }
+
   const result = await db.query(
     `WITH target_member AS (
        SELECT id, name, phone, status, join_date, gym_id,
               freeze_reason_type, freeze_custom_reason, freeze_notes, frozen_at
        FROM members 
-       WHERE (id::text = $1 OR phone = $1 OR (LENGTH(REGEXP_REPLACE($1, '[^0-9]', '', 'g')) >= 10 AND RIGHT(REGEXP_REPLACE(phone, '[^0-9]', '', 'g'), 10) = RIGHT(REGEXP_REPLACE($1, '[^0-9]', '', 'g'), 10))) AND gym_id = $2
+       WHERE ${targetFilter}
        LIMIT 1
      ),
      last_payment AS (
        SELECT DISTINCT ON (member_id) member_id, valid_until, payment_date as last_payment_date, amount, plan_id
        FROM payments 
-       WHERE member_id IN (SELECT id FROM target_member)
+       WHERE member_id IN (SELECT id FROM target_member) AND gym_id = $2
        ORDER BY member_id, valid_until DESC
      ),
      attendance_summary AS (
        SELECT 
          tm.id as member_id,
          COUNT(*) FILTER (WHERE check_in_time > NOW() - INTERVAL '30 days') as monthly_visits,
-         (SELECT check_in_time FROM attendance WHERE member_id = tm.id ORDER BY check_in_time DESC LIMIT 1 OFFSET 1) as prev_visit,
-         (SELECT json_agg(h) FROM (SELECT check_in_time FROM attendance WHERE member_id = tm.id ORDER BY check_in_time DESC LIMIT 3) h) as history
+         (SELECT check_in_time FROM attendance WHERE member_id = tm.id AND gym_id = tm.gym_id ORDER BY check_in_time DESC LIMIT 1 OFFSET 1) as prev_visit,
+         (SELECT json_agg(h) FROM (SELECT check_in_time FROM attendance WHERE member_id = tm.id AND gym_id = tm.gym_id ORDER BY check_in_time DESC LIMIT 3) h) as history
        FROM target_member tm
-       LEFT JOIN attendance a ON tm.id = a.member_id
+       LEFT JOIN attendance a ON tm.id = a.member_id AND a.gym_id = tm.gym_id
        GROUP BY tm.id
      ),
      streak_calc AS (
        SELECT count(*) as streak FROM (
          SELECT DISTINCT date_trunc('day', check_in_time) as visit_day
          FROM attendance 
-         WHERE member_id IN (SELECT id FROM target_member)
+         WHERE member_id IN (SELECT id FROM target_member) AND gym_id = $2
        ) s
      )
      SELECT 
@@ -47,7 +62,7 @@ const recordAttendance = async (memberId, gymId) => {
      LEFT JOIN plans p ON lp.plan_id = p.id
      LEFT JOIN attendance_summary asum ON tm.id = asum.member_id
      CROSS JOIN streak_calc sc`,
-    [memberId, gymId]
+    params
   );
 
   if (result.rows.length === 0) throw new Error('Member not found');
@@ -110,20 +125,22 @@ const recordAttendance = async (memberId, gymId) => {
   if (intelligence.monthlyVisits > 20) intelligence.alerts.push({ type: 'VIP', message: 'High attendance: VIP Member' });
   if (new Date(member.join_date) > new Date(Date.now() - 7 * 24 * 60 * 60 * 1000)) intelligence.alerts.push({ type: 'NEW', message: 'New Member: Welcome!' });
 
-  // 4. Idempotency Check (Prevent duplicate scans within 5 minutes)
+  // 4. Idempotency Check (Prevent duplicate scans within 5 minutes or on the same calendar day)
   const recentCheck = await db.query(
-    `SELECT id FROM attendance 
+    `SELECT * FROM attendance 
      WHERE member_id = $1 AND gym_id = $2 
-     AND check_in_time > NOW() - INTERVAL '5 minutes'`,
+     AND (
+       check_in_time > NOW() - INTERVAL '5 minutes'
+       OR DATE(check_in_time) = CURRENT_DATE
+     )
+     ORDER BY check_in_time DESC
+     LIMIT 1`,
     [member.id, gymId]
   );
 
   if (recentCheck.rows.length > 0) {
-    const error = new Error('Attendance already recorded recently.');
-    error.isBlocked = true;
-    error.blockCode = 'DUPLICATE';
-    error.memberData = { ...member, error: 'Attendance already recorded recently.' };
-    throw error;
+    logger.info(`Idempotent check-in triggered for member ${member.name} (${member.id})`);
+    return { member, attendance: recentCheck.rows[0], intelligence };
   }
 
   // 5. Record Check-in (Using atomic transaction wrapper if needed, but simple INSERT is fine here)
@@ -132,6 +149,10 @@ const recordAttendance = async (memberId, gymId) => {
     [gymId, member.id]
   );
   const attendanceRecord = insertResult.rows[0];
+
+  // Invalidate member profile cache (Phase 11)
+  const { del } = require('./cacheService');
+  await del(gymId, `member_profile:${member.id}`);
 
   // 5. Emit Realtime Events
   eventBus.emit(EVENTS.ATTENDANCE_RECORDED, {

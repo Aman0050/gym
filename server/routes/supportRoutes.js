@@ -2,6 +2,9 @@ const express = require('express');
 const router = express.Router();
 const { getFAQs, createTicket, getTickets, adminGetTickets, adminGetTicketDetails, adminUpdateTicket } = require('../controllers/supportController');
 const { protect, superAdminOnly } = require('../middlewares/authMiddleware');
+const { validateUuidParamMiddleware } = require('../middlewares/validateMiddleware');
+
+router.param('id', validateUuidParamMiddleware);
 
 router.get('/faqs', protect, getFAQs);
 router.post('/tickets', protect, createTicket);

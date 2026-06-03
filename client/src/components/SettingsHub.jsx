@@ -200,10 +200,10 @@ const SettingsHub = ({ isOpen, onClose }) => {
                 {renderContent()}
               </div>
 
-              <div className="p-8 border-t border-white/[0.05] flex justify-end gap-4 bg-white/[0.01]">
+              <div className="p-8 border-t border-white/[0.05] flex justify-end gap-4 bg-white/[0.01] pb-safe-area">
                 <button
                   onClick={onClose}
-                  className="px-6 py-3 text-[10px] font-black uppercase tracking-widest text-slate-500 hover:text-ivory transition-all"
+                  className="px-6 py-3 text-[10px] font-black uppercase tracking-widest text-slate-500 hover:text-ivory hover:bg-white/[0.05] rounded-2xl transition-all"
                 >
                   Cancel
                 </button>

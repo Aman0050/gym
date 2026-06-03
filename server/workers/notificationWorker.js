@@ -1,5 +1,5 @@
 const { Worker } = require('bullmq');
-const redisConnection = require('../config/redis');
+const redisConnection = require('../config/queueRedis');
 const logger = require('../utils/logger');
 
 // Simulate provider logic (would normally be imported)

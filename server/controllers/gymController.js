@@ -37,17 +37,51 @@ const createGym = async (req, res) => {
 
 const updateGym = async (req, res) => {
   const { id } = req.params;
-  const { name, phone, address, contact_person } = req.body;
+  const { name, phone, address, contact_person, login_id, password } = req.body;
   try {
+    await db.query('BEGIN');
     const result = await db.query(
       'UPDATE gyms SET name = COALESCE($1, name), phone = COALESCE($2, phone), address = COALESCE($3, address), contact_person = COALESCE($4, contact_person) WHERE id = $5 RETURNING *',
       [name, phone, address, contact_person, id]
     );
-    if (result.rows.length === 0) return res.status(404).json({ error: 'Gym not found' });
+    if (result.rows.length === 0) {
+      await db.query('ROLLBACK');
+      return res.status(404).json({ error: 'Gym not found' });
+    }
+
+    if (login_id || password) {
+      let queryParts = [];
+      let values = [];
+      let idx = 1;
+      
+      if (login_id) {
+        // Check uniqueness if changing
+        const exists = await db.query('SELECT id FROM gym_accounts WHERE gym_id = $1 AND branch_id != $2', [login_id.trim().toLowerCase(), id]);
+        if (exists.rows.length > 0) {
+          await db.query('ROLLBACK');
+          return res.status(409).json({ error: 'Login ID already taken by another branch.' });
+        }
+        queryParts.push(`gym_id = $${idx++}`);
+        values.push(login_id.trim().toLowerCase());
+      }
+      
+      if (password && password.length > 0) {
+        queryParts.push(`password_hash = $${idx++}`);
+        values.push(await bcrypt.hash(password, 12));
+      }
+      
+      values.push(id);
+      if (queryParts.length > 0) {
+        await db.query(`UPDATE gym_accounts SET ${queryParts.join(', ')} WHERE branch_id = $${idx}`, values);
+      }
+    }
+
+    await db.query('COMMIT');
     res.json(result.rows[0]);
   } catch (err) {
+    await db.query('ROLLBACK');
     logger.error('Update gym error:', err);
-    res.status(500).json({ error: 'Failed to update gym' });
+    res.status(500).json({ error: 'Failed to update gym profile and credentials' });
   }
 };
 
@@ -131,6 +165,8 @@ const getGlobalAnalytics = async (req, res) => {
   }
 };
 
+const { uuidRegex } = require('../middlewares/validateMiddleware');
+
 // POST /api/gym/create-account
 const createGymAccount = async (req, res) => {
   const { branch_id, gym_id, password } = req.body;
@@ -138,6 +174,9 @@ const createGymAccount = async (req, res) => {
   // Basic validation
   if (!branch_id || !gym_id || !password) {
     return res.status(400).json({ error: 'branch_id, gym_id, and password are required' });
+  }
+  if (!uuidRegex.test(branch_id)) {
+    return res.status(400).json({ error: 'Invalid branch_id format' });
   }
   if (gym_id.trim().length < 3) {
     return res.status(400).json({ error: 'Gym ID must be at least 3 characters' });
@@ -209,7 +248,12 @@ const assignManager = async (req, res) => {
 const getGymDetails = async (req, res) => {
   const { id } = req.params;
   try {
-    const branchRes = await db.query('SELECT * FROM gyms WHERE id = $1', [id]);
+    const branchRes = await db.query(`
+      SELECT g.*, ga.gym_id as login_id 
+      FROM gyms g 
+      LEFT JOIN gym_accounts ga ON g.id = ga.branch_id 
+      WHERE g.id = $1
+    `, [id]);
     if (branchRes.rows.length === 0) return res.status(404).json({ error: 'Branch not found' });
     const branch = branchRes.rows[0];
 

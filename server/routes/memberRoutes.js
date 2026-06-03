@@ -13,6 +13,9 @@ const {
 } = require('../controllers/memberController');
 const { protect, adminOnly } = require('../middlewares/authMiddleware');
 const { checkTenantStatus } = require('../middlewares/tenantMiddleware');
+const { validateUuidParamMiddleware } = require('../middlewares/validateMiddleware');
+
+router.param('id', validateUuidParamMiddleware);
 
 router.use(protect);
 router.use(checkTenantStatus);

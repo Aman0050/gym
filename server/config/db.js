@@ -3,9 +3,10 @@ require('dotenv').config();
 
 const pool = new Pool({
   connectionString: process.env.DATABASE_URL,
-  max: 20, // High-performance pool size for enterprise concurrency
+  max: 50,
+  min: 5,
   idleTimeoutMillis: 30000,
-  connectionTimeoutMillis: 10000, // Increased to 10s for remote DB connections
+  connectionTimeoutMillis: 3000,
   ssl: {
     rejectUnauthorized: false
   }
@@ -14,7 +15,6 @@ const pool = new Pool({
 // Production Error Handling for Pool
 pool.on('error', (err) => {
   console.error('CRITICAL: Unexpected error on idle database client', err);
-  // Do not exit process, let pooling recover
 });
 
 pool.connect()
@@ -22,6 +22,26 @@ pool.connect()
   .catch(err => console.error('Database connection error', err.stack));
 
 module.exports = {
-  query: (text, params) => pool.query(text, params),
-  pool // Export raw pool for advanced transaction management
+  query: async (text, params) => {
+    try {
+      return await pool.query(text, params);
+    } catch (err) {
+      if (
+        err.message && (
+          err.message.includes('timeout') ||
+          err.message.includes('connection') ||
+          err.message.includes('Pool') ||
+          err.code === 'ECONNREFUSED' ||
+          err.code === 'ETIMEDOUT'
+        )
+      ) {
+        const dbErr = new Error('Database service temporarily unavailable due to connection timeout or pool starvation.');
+        dbErr.statusCode = 503;
+        dbErr.isOperational = true;
+        throw dbErr;
+      }
+      throw err;
+    }
+  },
+  pool
 };

@@ -20,20 +20,26 @@ const initSocket = (server) => {
   const { createAdapter } = require('@socket.io/redis-adapter');
   const redisConnection = require('../config/redis');
   
-  // Create Redis clients for Pub/Sub (Scaling)
-  const pubClient = redisConnection.duplicate();
-  const subClient = redisConnection.duplicate();
+  let adapter;
+  if (redisConnection.status === 'ready') {
+    // Create Redis clients for Pub/Sub (Scaling)
+    const pubClient = redisConnection.duplicate();
+    const subClient = redisConnection.duplicate();
 
-  pubClient.on('error', (err) => {
-    if (err.message && err.message.includes('ECONNREFUSED')) return;
-    logger.error(`Socket PubClient Error: ${err.message}`, err);
-  });
-  subClient.on('error', (err) => {
-    if (err.message && err.message.includes('ECONNREFUSED')) return;
-    logger.error(`Socket SubClient Error: ${err.message}`, err);
-  });
+    pubClient.on('error', (err) => {
+      if (err.message && err.message.includes('ECONNREFUSED')) return;
+      logger.error(`Socket PubClient Error: ${err.message}`);
+    });
+    subClient.on('error', (err) => {
+      if (err.message && err.message.includes('ECONNREFUSED')) return;
+      logger.error(`Socket SubClient Error: ${err.message}`);
+    });
+    adapter = createAdapter(pubClient, subClient);
+  } else {
+    logger.warn('Socket Service: Redis is offline, falling back to local memory socket adapter');
+  }
 
-  io = new Server(server, {
+  const ioOptions = {
     cors: {
       origin: function (origin, callback) {
         if (!origin) return callback(null, true);
@@ -47,12 +53,17 @@ const initSocket = (server) => {
       methods: ["GET", "POST"],
       credentials: true,
     },
-    adapter: createAdapter(pubClient, subClient),
-    transports: ['websocket', 'polling'], // Allow polling as fallback but prioritize websocket
+    transports: ['websocket'], // Force websocket only (Phase 10)
     allowEIO3: true, 
-    pingTimeout: 60000,
+    pingTimeout: 30000, // Hardened to 30s (Phase 10)
     pingInterval: 25000
-  });
+  };
+
+  if (adapter) {
+    ioOptions.adapter = adapter;
+  }
+
+  io = new Server(server, ioOptions);
 
   // Middleware: Authenticate Socket
   io.use((socket, next) => {
@@ -102,12 +113,16 @@ const setupEventBusBridge = () => {
   });
 
   eventBus.on(EVENTS.MEMBER_CREATED, (data) => {
-    broadcastToGym(data.gymId, 'NEW_MEMBER', data);
+    broadcastToGym(data.gymId, 'MEMBER_CREATED', data);
+  });
+
+  eventBus.on('notification.created', (data) => {
+    broadcastToGym(data.gymId, 'NEW_NOTIFICATION', data);
   });
 
   // Multi-Admin Sync Events
   eventBus.on('member.updated', (data) => {
-    broadcastToGym(data.gymId, 'MEMBER_SYNC', data);
+    broadcastToGym(data.gymId, 'MEMBER_UPDATED', data);
   });
 
   eventBus.on('plan.updated', (data) => {
@@ -131,16 +146,9 @@ const setupEventBusBridge = () => {
 const disconnectGym = (gymId) => {
   if (io) {
     const room = `gym_${gymId}`;
-    const sockets = io.sockets.adapter.rooms.get(room);
-    if (sockets) {
-      sockets.forEach((socketId) => {
-        const socket = io.sockets.sockets.get(socketId);
-        if (socket) {
-          socket.disconnect(true);
-          logger.info(`Force disconnected socket ${socketId} due to gym suspension`);
-        }
-      });
-    }
+    // Uses the Redis adapter to globally disconnect all sockets in the room across all nodes
+    io.in(room).disconnectSockets(true);
+    logger.info(`Cluster-wide force disconnect triggered for gym_${gymId} due to suspension`);
   }
 };
 

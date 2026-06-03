@@ -160,6 +160,29 @@ const refreshToken = async (req, res) => {
     }
 
     const decoded = jwt.verify(token, process.env.JWT_REFRESH_SECRET);
+
+    // Verify Gym exists and is still ACTIVE (prevents suspended tenants from bypassing via refresh)
+    if (decoded.role !== 'SUPER_ADMIN' && decoded.gym_id) {
+      const gymCheck = await db.query(
+        'SELECT saas_subscription_status, suspension_reason FROM gyms WHERE id = $1',
+        [decoded.gym_id]
+      );
+      
+      if (gymCheck.rows.length === 0) {
+        await db.query('DELETE FROM refresh_tokens WHERE id = $1', [storedToken.id]);
+        return res.status(403).json({ error: 'Tenant not found. Access revoked.' });
+      }
+      
+      const gym = gymCheck.rows[0];
+      if (gym.saas_subscription_status === 'SUSPENDED' || gym.saas_subscription_status === 'DISABLED') {
+        await db.query('DELETE FROM refresh_tokens WHERE id = $1', [storedToken.id]);
+        return res.status(403).json({ 
+          error: `Tenant account is ${gym.saas_subscription_status.toLowerCase()}. Access revoked.`,
+          reason: gym.suspension_reason
+        });
+      }
+    }
+
     const newAccessToken = generateAccessToken(decoded.id, decoded.role, decoded.gym_id);
 
     res.json({ accessToken: newAccessToken });

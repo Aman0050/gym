@@ -144,9 +144,9 @@ const Layout = () => {
         isMobile={true}
         isOpen={isMobileMenuOpen}
         onClose={() => setIsMobileMenuOpen(false)}
-        onNotificationsClick={() => setShowNotifications(true)}
-        onSettingsClick={() => setShowSettings(true)}
-        onHelpClick={() => setShowHelp(true)}
+        onNotificationsClick={() => { setShowNotifications(true); setIsMobileMenuOpen(false); }}
+        onSettingsClick={() => { setShowSettings(true); setIsMobileMenuOpen(false); }}
+        onHelpClick={() => { setShowHelp(true); setIsMobileMenuOpen(false); }}
       />
 
       {/* ── Sidebar: Desktop Persistent ── */}
@@ -185,8 +185,8 @@ const Layout = () => {
               <Menu className="text-white" size={18} />
             </button>
 
-            <div className="hidden sm:flex flex-col">
-              <div className="flex items-baseline text-[20px] font-black tracking-tight capitalize">
+            <div className="flex flex-col min-w-0">
+              <div className="flex items-baseline text-[16px] sm:text-[20px] font-black tracking-tight capitalize max-w-[140px] sm:max-w-none">
                 {(() => {
                   const gymName = (user?.gym_name || 'FitXeno').toLowerCase();
                   const words = gymName.split(' ');
@@ -195,9 +195,9 @@ const Layout = () => {
                   
                   return (
                     <>
-                      <span className="text-white">{firstWord}</span>
+                      <span className="text-white truncate">{firstWord}</span>
                       {restWords && (
-                        <span className="text-earth-clay ml-1">{restWords}</span>
+                        <span className="text-earth-clay ml-1 truncate">{restWords}</span>
                       )}
                     </>
                   );
@@ -210,7 +210,7 @@ const Layout = () => {
                   animate={{ opacity: 1, y: 0 }}
                   exit={{ opacity: 0, y: -4 }}
                   transition={{ duration: 0.2 }}
-                  className="text-sm font-black text-ivory tracking-tight mt-1 leading-none"
+                  className="text-[11px] sm:text-sm font-black text-ivory tracking-tight mt-1 leading-none"
                 >
                   {routeLabel}
                 </motion.p>
@@ -266,7 +266,7 @@ const Layout = () => {
                     animate={{ opacity: 1, y: 0, scale: 1 }}
                     exit={{ opacity: 0, y: -4, scale: 0.98 }}
                     transition={{ duration: 0.2, ease: [0.23, 1, 0.32, 1] }}
-                    className="absolute top-[calc(100%+12px)] right-0 w-[300px] z-50 origin-top-right"
+                    className="absolute top-[calc(100%+12px)] right-0 w-[min(300px,calc(100vw-2rem))] z-50 origin-top-right"
                   >
                     {/* Outer Glow & Border Container */}
                     <div className="relative w-full rounded-2xl bg-[#080808] border border-white/[0.08] shadow-[0_32px_64px_-16px_rgba(0,0,0,0.9)] overflow-hidden">

@@ -7,6 +7,8 @@ import SuspensionScreen from './pages/SuspensionScreen';
 
 // ── Lazy Load Pages ──
 const Home       = lazy(() => import('./pages/Home'));
+const About      = lazy(() => import('./pages/About'));
+const Contact    = lazy(() => import('./pages/Contact'));
 const Login      = lazy(() => import('./pages/Login'));
 const Dashboard  = lazy(() => import('./pages/Dashboard'));
 const Members    = lazy(() => import('./pages/Members'));
@@ -40,6 +42,8 @@ function App() {
         <Routes>
           {/* Public */}
           <Route path="/"      element={!isAuthenticated ? <Home />  : <Navigate to="/dashboard" replace />} />
+          <Route path="/about" element={<About />} />
+          <Route path="/contact" element={<Contact />} />
           <Route path="/login" element={!isAuthenticated ? <Login /> : <Navigate to="/dashboard" replace />} />
 
           {/* Protected — wrapped by Layout (which now owns the Toaster) */}

@@ -2,9 +2,12 @@ const redis = require('../config/redis');
 const logger = require('../utils/logger');
 
 const CACHE_TTL = {
-  SHORT: 300,    // 5 mins
-  MEDIUM: 3600,  // 1 hour
-  LONG: 86400    // 1 day
+  DASHBOARD: 30, // 30 sec (Phase 11)
+  MEMBER: 60,    // 60 sec (Phase 11)
+  PLAN: 300,     // 300 sec (Phase 11)
+  SHORT: 300,
+  MEDIUM: 3600,
+  LONG: 86400
 };
 
 const cacheDashboard = async (gymId, data) => {
@@ -67,11 +70,25 @@ const set = async (gymId, namespace, data, ttl = CACHE_TTL.MEDIUM) => {
   }
 };
 
+/**
+ * Generic multi-tenant cache DELETE (Phase 11)
+ */
+const del = async (gymId, namespace) => {
+  try {
+    if (redis.status !== 'ready') return;
+    const key = `cache:${gymId}:${namespace}`;
+    await redis.del(key);
+  } catch (err) {
+    logger.error('Generic cache delete error:', err);
+  }
+};
+
 module.exports = {
   CACHE_TTL,
   cacheDashboard,
   getCachedDashboard,
   invalidateDashboard,
   get,
-  set
+  set,
+  del
 };

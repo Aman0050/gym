@@ -27,9 +27,9 @@ export const useSupportStore = create((set, get) => ({
   createTicket: async (ticketData) => {
     set({ isLoading: true });
     try {
-      console.log("Submitting Ticket", ticketData);
+      if (import.meta.env.DEV) console.log('[Support] Submitting Ticket', ticketData);
       const res = await api.post('/support/tickets', ticketData);
-      console.log("Submit Ticket API Response:", res.data);
+      if (import.meta.env.DEV) console.log('[Support] Submit Ticket API Response:', res.data);
       
       const newTicket = res.data.success ? res.data.ticket : res.data;
 

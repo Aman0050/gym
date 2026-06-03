@@ -14,7 +14,7 @@ const GlobalSocketListener = () => {
     if (user?.role !== 'SUPER_ADMIN') return;
 
     const handleNewTicket = (payload) => {
-      console.log('Ticket notification received:', payload);
+      if (import.meta.env.DEV) console.log('[Socket] Ticket notification received:', payload);
       const isCritical = payload.priority === 'CRITICAL';
       const isHigh = payload.priority === 'HIGH';
 
@@ -76,7 +76,7 @@ const GlobalSocketListener = () => {
     socket.on('SUPPORT_TICKET_CREATED', handleNewTicket);
 
     return () => {
-      socket.off('SUPPORT_TICKET_CREATED');
+      socket.off('SUPPORT_TICKET_CREATED', handleNewTicket);
     };
   }, [user, navigate]);
 

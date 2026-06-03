@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
 import api from '../services/api';
 import {
@@ -24,9 +24,7 @@ const SuperAdminDashboard = () => {
   const [managerName, setManagerName] = useState('');
   const [savingManager, setSavingManager] = useState(false);
 
-  useEffect(() => { fetchData(); }, []);
-
-  const fetchData = async () => {
+  const fetchData = useCallback(async () => {
     try {
       const [statsRes, gymsRes] = await Promise.all([
         api.get('/gyms/analytics/global'),
@@ -39,7 +37,9 @@ const SuperAdminDashboard = () => {
     } finally {
       setLoading(false);
     }
-  };
+  }, []);
+
+  useEffect(() => { fetchData(); }, [fetchData]);
 
   const handleStatusUpdate = async (id, currentStatus) => {
     const newStatus = currentStatus === 'ACTIVE' ? 'SUSPENDED' : 'ACTIVE';
@@ -129,7 +129,7 @@ const SuperAdminDashboard = () => {
                 <div className="relative z-10">
                   <p className="label-text !text-[8px] !text-slate-500 mb-2">{s.label}</p>
                   <h3 className="text-3xl lg:text-4xl font-black text-ivory leading-none tracking-tight flex items-baseline gap-1">
-                    {s.isCurrency && <span className="text-emerald-400 text-xl">₹</span>}
+                    {s.isCurrency && <span className="text-emerald-400">₹</span>}
                     <AnimatedCounter value={s.value} />
                   </h3>
                 </div>
@@ -140,12 +140,12 @@ const SuperAdminDashboard = () => {
 
         {/* ── Branch Directory ── */}
         <FadeIn direction="up" delay={0.25} duration={0.4}>
-          <Card variant="flat" className="p-0 overflow-hidden shadow-xl">
+          <div className="overflow-hidden shadow-xl rounded-[1.25rem] border border-white/[0.05] bg-white/[0.02]">
             {/* Table Toolbar */}
             <div className="p-6 lg:p-8 border-b border-white/[0.06] bg-white/[0.02] flex flex-col md:flex-row gap-6 lg:gap-8 items-center justify-between">
               <div className="flex items-center gap-4 self-start md:self-auto">
                 <BarChart3 size={18} className="text-earth-clay" />
-                <h3 className="label-text !text-ivory">Branch Directory</h3>
+                <h3 className="label-text !text-ivory !text-sm sm:!text-base">Branch Directory</h3>
               </div>
               <div className="relative w-full md:w-64 lg:w-80 flex-shrink-0">
                 <Search className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400 pointer-events-none" size={16} />
@@ -162,8 +162,8 @@ const SuperAdminDashboard = () => {
             <Table
               headers={[
                 { label: 'Branch',      className: 'flex-[2]' },
-                { label: 'Manager',     className: 'flex-1' },
-                { label: 'Performance', className: 'flex-1' },
+                { label: 'Manager',     className: 'flex-1 hidden md:table-cell' },
+                { label: 'Performance', className: 'flex-1 hidden md:table-cell' },
                 { label: 'Status',      className: 'w-36' },
                 { label: 'Actions',     className: 'w-20 text-right' },
               ]}
@@ -190,18 +190,18 @@ const SuperAdminDashboard = () => {
                   </div>
 
                   {/* ── Manager info ── */}
-                  <div className="flex-1 flex-col">
+                  <div className="flex-1 flex-col hidden md:flex">
                     <p className="text-xs font-black text-slate-400 truncate">{g.contact_person || 'Unassigned'}</p>
                   </div>
 
                   {/* ── Performance ── */}
-                  <div className="flex-1 flex items-center gap-6">
-                    <div className="flex items-center gap-2">
+                  <div className="flex-1 items-center gap-6 hidden md:flex">
+                    <div className="flex items-center gap-1">
                       <Users size={12} className="text-slate-500" />
                       <p className="text-sm font-black text-ivory">{g.total_members || 0}</p>
                     </div>
                     <div className="w-px h-6 bg-white/[0.08]" />
-                    <div className="flex items-center gap-2">
+                    <div className="flex items-center gap-1">
                       <IndianRupee size={12} className="text-emerald-500" />
                       <p className="text-sm font-black text-emerald-500">
                         {Number(g.total_revenue || 0).toLocaleString('en-IN')}
@@ -254,7 +254,7 @@ const SuperAdminDashboard = () => {
                 </TableRow>
               ))}
             </Table>
-          </Card>
+          </div>
         </FadeIn>
 
         {/* ── Assign Manager Modal ── */}

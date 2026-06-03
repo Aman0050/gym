@@ -95,8 +95,8 @@ const Attendance = () => {
   };
 
   return (
-    <PageTransition className="h-[calc(100vh-3rem)] flex flex-col">
-      <div className="max-w-7xl w-full mx-auto flex flex-col flex-1 min-h-0 pt-2 lg:pt-4">
+    <PageTransition className="flex flex-col lg:h-[calc(100vh-7rem)] lg:overflow-hidden">
+      <div className="max-w-7xl w-full mx-auto flex flex-col flex-1 min-h-0 pt-2 lg:pt-4 pb-4">
 
         {/* ── Page Header ── */}
         <FadeIn direction="down" duration={0.4}>
@@ -119,8 +119,8 @@ const Attendance = () => {
         <div className="flex-1 min-h-0 grid grid-cols-1 lg:grid-cols-2 gap-6 xl:gap-8 items-stretch pb-6">
           
           {/* LEFT SIDE: manual attendance entry card */}
-          <div className="flex flex-col min-h-0 h-full">
-            <Card variant="flat" className="p-6 lg:p-8 flex flex-col justify-between h-full min-h-0">
+          <div className="flex flex-col min-h-0">
+            <Card variant="flat" className="p-6 lg:p-8 flex flex-col">
               <div>
                 <h2 className="text-lg font-black text-ivory flex items-center gap-2.5 mb-8">
                   <Search className="text-earth-clay" size={20} />
@@ -172,7 +172,7 @@ const Attendance = () => {
           </div>
 
           {/* RIGHT SIDE: Persistent live verification console */}
-          <div className="flex flex-col h-full">
+          <div className="flex flex-col h-full min-h-[400px] lg:min-h-0">
             <AnimatePresence mode="wait">
               {lastCheckin ? (
                 // ── Persistent Successful Member Verification Card ──

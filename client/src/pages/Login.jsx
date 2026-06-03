@@ -113,7 +113,7 @@ const Login = () => {
           <div className="flex items-center justify-end mb-6">
             <button
               onClick={() => navigate('/')}
-              className="flex items-center gap-2.5 text-[10px] font-black text-slate-500 uppercase tracking-widest hover:text-earth-clay transition-colors group touch-target"
+              className="flex items-center gap-2.5 px-4 py-2 rounded-xl bg-white/[0.02] border border-white/[0.05] text-[10px] font-black text-slate-500 uppercase tracking-widest hover:text-earth-clay transition-all group"
             >
               <ArrowLeft size={14} className="group-hover:-translate-x-1 transition-transform" />
               Return

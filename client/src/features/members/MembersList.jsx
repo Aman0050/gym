@@ -232,13 +232,13 @@ const MembersList = () => {
               initial={{ opacity: 0, y: -10 }}
               animate={{ opacity: 1, y: 0 }}
               exit={{ opacity: 0, y: -10 }}
-              className="bg-earth-clay/10 border border-earth-clay/30 p-4 rounded-2xl flex items-center justify-between"
+              className="bg-earth-clay/10 border border-earth-clay/30 p-4 rounded-2xl flex flex-col sm:flex-row items-start sm:items-center justify-between gap-2 sm:gap-0"
             >
-              <div className="flex items-center gap-4">
+              <div className="flex flex-wrap items-center gap-3">
                 <span className="text-[11px] font-black text-ivory uppercase tracking-widest">
-                  {selectedMembers.length} Members Selected
+                  {selectedMembers.length} Selected
                 </span>
-                <div className="w-px h-4 bg-white/10" />
+                <div className="w-px h-4 bg-white/10 hidden sm:block" />
                 <button className="text-[10px] font-black text-slate-400 hover:text-ivory uppercase tracking-widest transition-colors">
                   Send Message
                 </button>
@@ -248,7 +248,7 @@ const MembersList = () => {
               </div>
               <button 
                 onClick={() => setSelectedMembers([])}
-                className="text-[10px] font-black text-slate-500 hover:text-ivory uppercase tracking-widest"
+                className="text-[10px] font-black text-slate-500 hover:text-ivory uppercase tracking-widest self-end sm:self-auto"
               >
                 Clear
               </button>
@@ -319,7 +319,7 @@ const MembersList = () => {
                 <Link
                   to={`/members/profile/${m.id}`}
                   onClick={(e) => e.stopPropagation()}
-                  className="flex items-center gap-5 group/link"
+                  className="flex items-center gap-5 group/link after:hidden"
                 >
                   <div className="w-10 h-10 bg-white/[0.04] rounded-xl flex items-center justify-center border border-white/[0.07] group-hover/link:border-earth-clay/30 transition-all shadow-[0_4px_12px_rgba(0,0,0,0.1)]">
                     <User size={16} className="text-slate-500 group-hover/link:text-earth-clay transition-colors" />

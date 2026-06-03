@@ -22,9 +22,9 @@ const SupportTicketDetails = () => {
   const fetchData = async () => {
     setLoading(true);
     try {
-      console.log("Route ticketId", id);
+      if (import.meta.env.DEV) console.log('[Support] Route ticketId', id);
       const res = await api.get(`/support/admin/tickets/${id}`);
-      console.log("Fetched ticket", res.data);
+      if (import.meta.env.DEV) console.log('[Support] Fetched ticket', res.data);
       setData(res.data);
       setStatus(res.data.ticket.status);
     } catch (err) {

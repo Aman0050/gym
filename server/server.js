@@ -98,18 +98,81 @@ app.use(cors({
 app.use(express.json({ limit: '10kb' })); // Body limit for security
 app.use(requestMonitor); // Custom Performance Monitor
 
-// Rate Limiting Hub (DDoS & Brute-force protection)
+// Rate Limiting Hub (Redis-Backed with local memory fallback)
+const { RedisStore } = require('rate-limit-redis');
+const redisConnection = require('./config/redis');
+
+// Middleware to pre-parse JWT properties for rate limiting before token verification runs
+const parseRateLimitKeys = (req, res, next) => {
+  const authHeader = req.headers.authorization || req.headers.Authorization;
+  if (authHeader && authHeader.startsWith('Bearer ')) {
+    const token = authHeader.split(' ')[1];
+    try {
+      const jwt = require('jsonwebtoken');
+      const decoded = jwt.decode(token);
+      if (decoded) {
+        req.limiterUser = {
+          id: decoded.id,
+          gym_id: decoded.gym_id
+        };
+      }
+    } catch (err) {
+      // Fail silent
+    }
+  }
+  next();
+};
+
+app.use(parseRateLimitKeys);
+
+const getLimiterStore = (prefix) => {
+  return new RedisStore({
+    sendCommand: async (...args) => {
+      if (redisConnection.status !== 'ready') {
+        throw new Error('Redis is offline');
+      }
+      return await redisConnection.call(...args);
+    },
+    prefix: `rl:${prefix}:`,
+  });
+};
+
 const apiLimiter = rateLimit({
   windowMs: 15 * 60 * 1000,
-  max: 300, // General APIs: 300 requests per 15m
+  max: 1000, // API: 1000 requests per 15m
   standardHeaders: true,
   legacyHeaders: false,
+  passOnStoreError: true,
+  store: getLimiterStore('api'),
+  validate: false,
+  keyGenerator: (req) => {
+    if (req.limiterUser) {
+      if (req.limiterUser.gym_id) {
+        return `${req.limiterUser.gym_id}:${req.limiterUser.id || 'anon'}`;
+      }
+      if (req.limiterUser.id) {
+        return `${req.limiterUser.id}`;
+      }
+    }
+    return req.ip;
+  },
   message: { error: 'Too many requests. High operational load detected.' }
 });
 
 const authLimiter = rateLimit({
   windowMs: 15 * 60 * 1000,
-  max: process.env.NODE_ENV === 'development' ? 1000 : 100, // Auth: 100 attempts per 15m (Brute-force protection)
+  max: 100, // Auth: 100 attempts per 15m (Brute-force protection)
+  standardHeaders: true,
+  legacyHeaders: false,
+  passOnStoreError: true,
+  store: getLimiterStore('auth'),
+  validate: false,
+  keyGenerator: (req) => {
+    if (req.body && req.body.email) {
+      return `${(req.body.email || '').trim().toLowerCase()}`;
+    }
+    return req.ip;
+  },
   message: { error: 'Too many login attempts. Please try again after 15 minutes.' }
 });
 
@@ -135,7 +198,7 @@ app.use('/api/notifications', require('./routes/notificationRoutes'));
 app.use('/api/settings', require('./routes/settingsRoutes'));
 
 // 6. Operational Health Hub
-app.get('/health', async (req, res) => {
+app.get(['/health', '/api/health'], async (req, res) => {
   try {
     const dbStatus = await db.query('SELECT 1');
     const redisStatus = require('./config/redis').status;
@@ -145,10 +208,23 @@ app.get('/health', async (req, res) => {
       database: dbStatus ? 'connected' : 'disconnected',
       cache: redisStatus === 'ready' ? 'connected' : 'disconnected',
       uptime: process.uptime(),
-      timestamp: new Date() 
+      timestamp: new Date(),
+      dbDiagnostics: {
+        totalCount: db.pool.totalCount,
+        idleCount: db.pool.idleCount,
+        waitingCount: db.pool.waitingCount
+      }
     });
   } catch (err) {
-    res.status(503).json({ status: 'unhealthy', error: err.message });
+    res.status(503).json({ 
+      status: 'unhealthy', 
+      error: err.message,
+      dbDiagnostics: db.pool ? {
+        totalCount: db.pool.totalCount,
+        idleCount: db.pool.idleCount,
+        waitingCount: db.pool.waitingCount
+      } : null
+    });
   }
 });
 
@@ -168,6 +244,9 @@ process.on('uncaughtException', (error) => {
 const PORT = process.env.PORT || 5000;
 server.listen(PORT, () => {
   logger.info(`System Operational on Node Hub: ${PORT}`);
+  if (process.send) {
+    process.send('ready');
+  }
 });
 
 // 8. Graceful Shutdown (Production Reliability)

@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import api from '../services/api';
 import {
@@ -40,13 +40,31 @@ const sparklineData4 = [
 const Dashboard = () => {
   const [data, setData] = useState(null);
   const [loading, setLoading] = useState(true);
+  const [showCharts, setShowCharts] = useState(false);
   const [timeRange, setTimeRange] = useState('This Week');
   const { user } = useAuthStore();
   const navigate = useNavigate();
 
+  const fetchDashboardData = useCallback(async () => {
+    const timer = { id: null };
+    try {
+      setShowCharts(false);
+      const res = await api.get(`/reports/dashboard?range=${encodeURIComponent(timeRange)}`);
+      setData(res.data);
+      requestAnimationFrame(() => {
+        timer.id = setTimeout(() => setShowCharts(true), 250);
+      });
+    } catch (err) {
+      toast.error('Failed to load dashboard data');
+    } finally {
+      setLoading(false);
+    }
+    return () => { if (timer.id) clearTimeout(timer.id); };
+  }, [timeRange]);
+
   useEffect(() => {
     fetchDashboardData();
-  }, [timeRange]);
+  }, [fetchDashboardData]);
 
   useEffect(() => {
     const handleRevenueUpdate = (payload) => {
@@ -163,17 +181,6 @@ const Dashboard = () => {
     };
   }, []);
 
-  const fetchDashboardData = async () => {
-    try {
-      const res = await api.get(`/reports/dashboard?range=${encodeURIComponent(timeRange)}`);
-      setData(res.data);
-    } catch (err) {
-      toast.error('Failed to load dashboard data');
-    } finally {
-      setLoading(false);
-    }
-  };
-
   if (loading && !data) return <DashboardSkeleton />;
   if (!data) return null;
 
@@ -254,7 +261,7 @@ const Dashboard = () => {
 
   return (
     <PageTransition>
-      <div className="space-y-6 max-w-screen-2xl mx-auto pb-safe-area">
+      <div className="space-y-6 lg:space-y-8 max-w-screen-2xl mx-auto">
 
         {/* ── 2. High-Fidelity Hero Banner ── */}
         <FadeIn direction="down" duration={0.5}>
@@ -267,8 +274,8 @@ const Dashboard = () => {
             <div className="absolute -right-16 -top-16 w-80 h-80 rounded-full bg-earth-clay/10 blur-[80px] group-hover:bg-earth-clay/15 transition-all duration-700 pointer-events-none" />
 
             <div className="relative z-10 space-y-3">
-              <p className="text-[11px] font-black uppercase tracking-[0.25em] text-earth-clay">
-                Welcome back, {getDisplayName(user)} 👋
+              <p className="text-[11px] font-black uppercase tracking-[0.25em] text-earth-clay flex items-center gap-2">
+                Welcome back, {getDisplayName(user)} <span className="text-lg sm:text-xl">👋</span>
               </p>
               <h2 className="text-xl md:text-2xl lg:text-3xl font-sans font-black text-ivory tracking-tight leading-tight max-w-xl">
                 Here's what's happening today at <span className="text-earth-clay font-bold">{user?.gym_name || 'FitXeno'}</span>.
@@ -298,7 +305,7 @@ const Dashboard = () => {
             <FadeIn key={kpi.title} direction="up" delay={idx * 0.05} duration={0.4}>
               <Card
                 variant="flat"
-                className="p-6 overflow-hidden relative group hover:border-white/[0.1] transition-all duration-300 flex flex-col justify-between h-44 shadow-[0_10px_30px_rgba(0,0,0,0.3)] cursor-pointer"
+                className="p-6 overflow-hidden relative group hover:border-white/[0.1] transition-all duration-300 flex flex-col justify-between h-44 shadow-[0_10px_30px_rgba(0,0,0,0.3)] cursor-pointer min-w-0"
                 onClick={() => kpi.title.includes('REVENUE') ? navigate('/payments') : navigate('/members')}
               >
                 {/* Background soft glow spotlight */}
@@ -323,6 +330,7 @@ const Dashboard = () => {
 
                 {/* Inline Sparkline Visualization */}
                 <div className="h-10 w-full relative z-10 mt-2 min-h-[40px] min-w-0">
+                  {!showCharts ? <div className="w-full h-full animate-pulse bg-white/5 rounded-xl" /> :
                   <ResponsiveContainer width="100%" height="100%" minWidth={0} minHeight={0}>
                     <AreaChart data={kpi.sparkline} margin={{ top: 2, right: 2, left: 2, bottom: 2 }}>
                       <defs>
@@ -341,7 +349,7 @@ const Dashboard = () => {
                         dot={false}
                       />
                     </AreaChart>
-                  </ResponsiveContainer>
+                  </ResponsiveContainer>}
                 </div>
 
                 <div className="flex items-center gap-1.5 mt-3 relative z-10">
@@ -372,12 +380,12 @@ const Dashboard = () => {
                     <h3 className="text-xs font-black uppercase tracking-widest text-slate-300">REVENUE OVERVIEW</h3>
                     <div className="flex items-baseline gap-3 mt-2">
                       <h4 className="text-3xl font-black text-ivory tracking-tight">
-                        ₹{Number(summary.monthlyRevenue || 0).toLocaleString('en-IN')}
+                        ₹{Number(data?.trends?.revenue?.reduce((sum, item) => sum + Number(item.total || 0), 0) || 0).toLocaleString('en-IN')}
                       </h4>
                       <p className="text-[10px] font-black text-slate-600 uppercase tracking-widest">Total Revenue</p>
                     </div>
                   </div>
-                  <div className="flex items-center gap-4">
+                  <div className="flex items-center gap-4 mr-3">
                     <span className="flex items-center gap-1 bg-emerald-500/10 text-emerald-400 px-3 py-1.5 rounded-xl border border-emerald-500/20 text-[9px] font-black uppercase tracking-widest">
                       <TrendingUp size={11} />
                       {summary.revenueGrowth} vs Last Month
@@ -385,7 +393,7 @@ const Dashboard = () => {
                     <select
                       value={timeRange}
                       onChange={(e) => setTimeRange(e.target.value)}
-                      className="bg-white/[0.03] border border-white/[0.06] rounded-xl text-[10px] font-black uppercase tracking-widest text-slate-400 py-1.5 px-3 focus:outline-none focus:border-earth-clay/35 transition-colors cursor-pointer"
+                      className="bg-white/[0.03] border border-white/[0.06] rounded-xl text-[10px] font-black uppercase tracking-widest text-slate-400 py-1.5 pl-3 pr-8 focus:outline-none focus:border-earth-clay/35 transition-colors cursor-pointer"
                     >
                       <option className="bg-obsidian">This Week</option>
                       <option className="bg-obsidian">This Month</option>
@@ -395,6 +403,7 @@ const Dashboard = () => {
                 </div>
 
                 <div className="h-72 lg:h-80 w-full min-h-[280px] min-w-0">
+                  {!showCharts ? <div className="w-full h-full animate-pulse bg-white/5 rounded-xl" /> :
                   <ResponsiveContainer width="100%" height="100%" minWidth={0} minHeight={0}>
                     <AreaChart data={trends.revenue} margin={{ top: 10, right: 10, left: -20, bottom: 0 }}>
                       <defs>
@@ -446,7 +455,7 @@ const Dashboard = () => {
                         activeDot={{ r: 6, fill: '#ea580c', stroke: '#fff', strokeWidth: 2 }}
                       />
                     </AreaChart>
-                  </ResponsiveContainer>
+                  </ResponsiveContainer>}
                 </div>
               </Card>
             </FadeIn>
@@ -462,6 +471,7 @@ const Dashboard = () => {
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-8 items-center">
                   {/* Circle Chart */}
                   <div className="relative w-full h-48 flex items-center justify-center min-h-[192px] min-w-0">
+                    {!showCharts ? <div className="w-full h-full animate-pulse bg-white/5 rounded-full" /> :
                     <ResponsiveContainer width="100%" height="100%" minWidth={0} minHeight={0}>
                       <PieChart>
                         <Pie
@@ -478,7 +488,7 @@ const Dashboard = () => {
                           ))}
                         </Pie>
                       </PieChart>
-                    </ResponsiveContainer>
+                    </ResponsiveContainer>}
                     {/* Centered Stats */}
                     <div className="absolute text-center">
                       <p className="text-3xl font-black text-ivory tracking-tight leading-none">{presentVal}</p>

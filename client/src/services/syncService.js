@@ -2,6 +2,8 @@ import api from './api';
 import { useSyncStore } from '../store/useSyncStore';
 import toast from 'react-hot-toast';
 
+let isInitialized = false;
+
 export const syncService = {
   /**
    * Main sync processor
@@ -30,12 +32,15 @@ export const syncService = {
    * Monitor network status
    */
   init: () => {
+    if (isInitialized) return;
+    isInitialized = true;
+
     // 1. Initial Load
     useSyncStore.getState().init();
 
     // 2. Listen for Network Return
     window.addEventListener('online', () => {
-      console.log('[Sync] Back Online - Triggering Auto-Sync');
+      if (import.meta.env.DEV) console.log('[Sync] Back Online - Triggering Auto-Sync');
       syncService.sync();
     });
 
@@ -45,3 +50,4 @@ export const syncService = {
     }, 1000 * 60 * 5); // Every 5 mins
   }
 };
+

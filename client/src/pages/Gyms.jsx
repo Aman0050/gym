@@ -39,9 +39,7 @@ const Gyms = () => {
   const [credErrors, setCredErrors] = useState({});
   const [creatingAccount, setCreatingAccount] = useState(false);
 
-  useEffect(() => { fetchGyms(); }, []);
-
-  const fetchGyms = async () => {
+  const fetchGyms = useCallback(async () => {
     setLoading(true);
     try {
       const response = await api.get('/gyms');
@@ -51,7 +49,9 @@ const Gyms = () => {
     } finally {
       setLoading(false);
     }
-  };
+  }, []);
+
+  useEffect(() => { fetchGyms(); }, [fetchGyms]);
 
   // Debounced gym_id availability check
   const checkAvailability = useCallback(async (value) => {
@@ -166,7 +166,7 @@ const Gyms = () => {
                 <span className="label-text">Branch Administration</span>
               </div>
               <h1 className="page-title text-ivory">
-                Manage <span className="text-earth-clay italic satin-shimmer inline-block">Branches</span>
+                Manage <span className="text-earth-clay italic">Branches</span>
               </h1>
               <p className="body-text !text-[10px] lg:!text-sm opacity-60">Manage and monitor independent fitness locations across your network.</p>
             </div>
@@ -185,7 +185,7 @@ const Gyms = () => {
           <div className="p-6 lg:p-8 border-b border-white/5 bg-white/2 flex flex-col md:flex-row gap-6 lg:gap-8 items-center justify-between">
             <div className="flex items-center space-x-4 self-start md:self-auto">
                <Globe size={18} className="text-earth-clay" />
-               <h3 className="label-text !text-ivory">Active Branch Directory</h3>
+               <h3 className="label-text !text-ivory !text-sm sm:!text-base">Active Branch Directory</h3>
             </div>
             <div className="relative w-full md:w-64 lg:w-80 flex-shrink-0">
               <Search className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400 pointer-events-none" size={16} />
@@ -360,7 +360,7 @@ const Gyms = () => {
 
                 <div className="bg-earth-clay/5 p-8 rounded-3xl border border-earth-clay/10 flex items-start space-x-6">
                   <Activity size={20} className="text-earth-clay mt-1" />
-                  <p className="body-text !text-xs italic opacity-60">After saving the branch, you'll set up login credentials in the next step.</p>
+                  <p className="text-sm font-semibold text-ivory">After saving the branch, you'll set up login credentials in the next step.</p>
                 </div>
 
                 <div className="flex gap-6 mt-12">

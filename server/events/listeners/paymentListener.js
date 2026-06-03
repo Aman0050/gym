@@ -13,19 +13,15 @@ const initPaymentListeners = () => {
       // Transition state to ACTIVE
       await activateAfterPayment(memberId, gymId);
 
-      // Trigger Unified Notification (In-App + WhatsApp Mock)
-      const { notify } = require('../../services/notificationService');
-      await notify({
+      // Trigger Unified Notification
+      const { createNotification } = require('../../services/notificationService');
+      await createNotification({
         gymId,
-        memberId,
-        templateKey: 'PAYMENT_CONFIRMED',
-        data: { 
-          memberName: memberName || 'Member', 
-          amount, 
-          validUntil: 'Next Month', // Dynamic calculation usually happens before emitting
-          gymName: 'Your Gym' 
-        },
-        channels: ['IN_APP', 'WHATSAPP']
+        type: 'PAYMENT_SUCCESS',
+        title: 'Payment Confirmed',
+        message: `${memberName || 'Member'} paid ₹${amount}.`,
+        priority: 'NORMAL',
+        actionUrl: `/payments?highlight=${data.paymentId || ''}`
       });
 
       // Auto-Record Attendance on Payment (Convenience for front-desk flows)

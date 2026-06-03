@@ -1,6 +1,7 @@
 const db = require('../config/db');
 const logger = require('../utils/logger');
 const exportService = require('../services/exportService');
+const { get, set, del, CACHE_TTL } = require('../services/cacheService');
 
 // Get all members with search, filter, sorting and pagination
 const getMembers = async (req, res) => {
@@ -41,6 +42,7 @@ const getMembers = async (req, res) => {
           payments.member_id, payments.valid_until, payments.amount, pl.name AS plan_name 
         FROM payments 
         LEFT JOIN plans pl ON payments.plan_id = pl.id
+        WHERE payments.gym_id = $1
         ORDER BY payments.member_id, payments.valid_until DESC
       ) p ON m.id = p.member_id 
       ${whereClause}
@@ -64,6 +66,14 @@ const getMembers = async (req, res) => {
 const createMember = async (req, res) => {
   const { name, phone, emergency_contact, blood_group } = req.body;
   const gymId = req.user.gym_id;
+
+  if (!name || typeof name !== 'string' || name.trim() === '') {
+    return res.status(400).json({ error: 'Valid name is required' });
+  }
+  if (!phone || typeof phone !== 'string' || phone.trim() === '') {
+    return res.status(400).json({ error: 'Valid phone number is required' });
+  }
+
   try {
     const resMember = await db.query(
       'INSERT INTO members (name, phone, emergency_contact, blood_group, gym_id) VALUES ($1, $2, $3, $4, $5) RETURNING *',
@@ -104,6 +114,10 @@ const freezeMembership = async (req, res) => {
     if (result.rows.length === 0) {
       return res.status(400).json({ error: 'Member not found or already frozen' });
     }
+
+    // Invalidate Cache
+    await del(gymId, `member_profile:${id}`);
+
     res.json({ message: 'Membership frozen successfully', member: result.rows[0] });
   } catch (err) {
     logger.error('Freeze membership error:', err);
@@ -116,12 +130,15 @@ const unfreezeMembership = async (req, res) => {
   const gymId = req.user.gym_id;
 
   try {
+    await db.query('BEGIN');
+
     // 1. Get member and their freeze date
     const memberResult = await db.query(
       "SELECT * FROM members WHERE id = $1 AND gym_id = $2 AND status = 'FROZEN'",
       [id, gymId]
     );
     if (memberResult.rows.length === 0) {
+      await db.query('ROLLBACK');
       return res.status(400).json({ error: 'Member not found or not frozen' });
     }
     const member = memberResult.rows[0];
@@ -152,6 +169,11 @@ const unfreezeMembership = async (req, res) => {
       [id]
     );
 
+    await db.query('COMMIT');
+
+    // Invalidate Cache
+    await del(gymId, `member_profile:${id}`);
+
     const { eventBus } = require('../events/eventBus');
     eventBus.emit('member.updated', { gymId, memberId: id, status: 'ACTIVE' });
 
@@ -160,6 +182,7 @@ const unfreezeMembership = async (req, res) => {
       member: result.rows[0] 
     });
   } catch (err) {
+    await db.query('ROLLBACK');
     logger.error('Unfreeze membership error:', err);
     res.status(500).json({ error: 'Server error during unfreeze' });
   }
@@ -168,18 +191,32 @@ const unfreezeMembership = async (req, res) => {
 const getMemberProfile = async (req, res) => {
   const { id } = req.params;
   const gymId = req.user.gym_id;
+  const bypassCache = req.query.bypassCache === 'true';
+
   try {
+    if (!bypassCache) {
+      const cachedProfile = await get(gymId, `member_profile:${id}`);
+      if (cachedProfile) {
+        return res.json(cachedProfile);
+      }
+    }
+
     const member = await db.query('SELECT * FROM members WHERE id = $1 AND gym_id = $2', [id, gymId]);
     if (member.rows.length === 0) return res.status(404).json({ error: 'Member not found' });
     
     const payments = await db.query('SELECT * FROM payments WHERE member_id = $1 ORDER BY payment_date DESC', [id]);
     const attendance = await db.query('SELECT * FROM attendance WHERE member_id = $1 ORDER BY check_in_time DESC LIMIT 30', [id]);
     
-    res.json({
+    const profileData = {
       profile: member.rows[0],
       payments: payments.rows,
       attendance: attendance.rows
-    });
+    };
+
+    // Cache profile for 60 seconds (Phase 11)
+    await set(gymId, `member_profile:${id}`, profileData, CACHE_TTL.MEMBER);
+
+    res.json(profileData);
   } catch (err) {
     logger.error('Fetch profile error:', err);
     res.status(500).json({ error: 'Failed to fetch profile' });
@@ -209,6 +246,7 @@ const exportMembers = async (req, res) => {
           member_id, valid_until, amount, plan_id, pl.name AS plan_name
         FROM payments
         JOIN plans pl ON payments.plan_id = pl.id
+        WHERE payments.gym_id = $1
         ORDER BY member_id, valid_until DESC
       ) p ON m.id = p.member_id
       WHERE m.gym_id = $1
@@ -305,7 +343,12 @@ const bulkAction = async (req, res) => {
   const adminId = req.user.id;
 
   if (!memberIds || !Array.isArray(memberIds)) {
-    return res.status(400).json({ error: 'Invalid member IDs' });
+    return res.status(400).json({ error: 'Invalid member IDs array' });
+  }
+
+  const { uuidRegex } = require('../middlewares/validateMiddleware');
+  if (memberIds.some(id => !uuidRegex.test(id))) {
+    return res.status(400).json({ error: 'One or more member IDs are invalid' });
   }
 
   try {
@@ -326,7 +369,6 @@ const bulkAction = async (req, res) => {
         );
         break;
       case 'UNFREEZE':
-        // Simplified bulk unfreeze (extension logic omitted for brevity in bulk)
         result = await db.query(
           `UPDATE members 
            SET status = 'ACTIVE', 
@@ -348,6 +390,12 @@ const bulkAction = async (req, res) => {
     }
 
     await db.query('COMMIT');
+
+    // Invalidate Cache for all modified members
+    for (const mId of memberIds) {
+      await del(gymId, `member_profile:${mId}`);
+    }
+
     res.json({ 
       message: `Bulk ${(action || '').toLowerCase()} completed`, 
       count: result.rowCount,
@@ -382,6 +430,9 @@ const updateMember = async (req, res) => {
       return res.status(404).json({ error: 'Member not found' });
     }
 
+    // Invalidate Cache
+    await del(gymId, `member_profile:${id}`);
+
     const { eventBus } = require('../events/eventBus');
     eventBus.emit('member.updated', { gymId, memberId: id, status: result.rows[0].status });
 
@@ -405,6 +456,9 @@ const deleteMember = async (req, res) => {
     if (result.rows.length === 0) {
       return res.status(404).json({ error: 'Member not found' });
     }
+
+    // Invalidate Cache
+    await del(gymId, `member_profile:${id}`);
 
     res.json({ message: 'Member deleted successfully' });
   } catch (err) {

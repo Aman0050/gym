@@ -55,7 +55,9 @@ const getDailyAttendance = async (req, res) => {
       `SELECT a.*, m.name as member_name
        FROM attendance a
        JOIN members m ON a.member_id = m.id
-       WHERE a.gym_id = $1 AND a.check_in_time::date = CURRENT_DATE
+       WHERE a.gym_id = $1 
+         AND a.check_in_time >= CURRENT_DATE 
+         AND a.check_in_time < CURRENT_DATE + INTERVAL '1 day'
        ORDER BY a.check_in_time DESC`,
       [gymId]
     );

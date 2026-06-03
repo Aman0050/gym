@@ -3,6 +3,9 @@ const router = express.Router();
 const { getNotifications, markAsRead, markAllAsRead } = require('../controllers/notificationController');
 const { protect } = require('../middlewares/authMiddleware');
 const { checkTenantStatus } = require('../middlewares/tenantMiddleware');
+const { validateUuidParamMiddleware } = require('../middlewares/validateMiddleware');
+
+router.param('id', validateUuidParamMiddleware);
 
 router.use(protect);
 router.use(checkTenantStatus);

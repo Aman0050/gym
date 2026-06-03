@@ -42,14 +42,14 @@ const createNotification = async ({ gymId, type, title, message, priority = 'NOR
 /**
  * Utility: Notify on Payment Success
  */
-const notifyPaymentSuccess = async (gymId, memberName, amount) => {
+const notifyPaymentSuccess = async (gymId, memberName, amount, paymentId = null) => {
   return createNotification({
     gymId,
     type: NOTIFICATION_TYPES.PAYMENT_SUCCESS,
     title: 'Payment Received',
     message: `Revenue boost! ${memberName} paid ₹${amount.toLocaleString('en-IN')}.`,
     priority: 'NORMAL',
-    actionUrl: '/payments'
+    actionUrl: paymentId ? `/payments?highlight=${paymentId}` : '/payments'
   });
 };
 

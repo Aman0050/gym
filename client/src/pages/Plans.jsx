@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import api from '../services/api';
 import {
   Plus, Trash2, Package, Clock,
@@ -16,9 +16,7 @@ const Plans = () => {
   const [editingPlanId, setEditingPlanId] = useState(null);
   const [newPlan, setNewPlan] = useState({ name: '', duration_days: '', price: '' });
 
-  useEffect(() => { fetchPlans(); }, []);
-
-  const fetchPlans = async () => {
+  const fetchPlans = useCallback(async () => {
     try {
       const res = await api.get('/plans');
       setPlans(res.data);
@@ -27,7 +25,9 @@ const Plans = () => {
     } finally {
       setLoading(false);
     }
-  };
+  }, []);
+
+  useEffect(() => { fetchPlans(); }, [fetchPlans]);
 
   const handleSavePlan = async (e) => {
     e.preventDefault();

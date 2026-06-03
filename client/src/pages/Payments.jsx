@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import api from '../services/api';
@@ -99,7 +99,11 @@ const Payments = () => {
   const [loading, setLoading] = useState(true);
   const [isAutoLoading, setIsAutoLoading] = useState(false);
   const [showModal, setShowModal] = useState(false);
-  const [search, setSearch] = useState('');
+  const location = useLocation();
+  const navigate = useNavigate();
+  const searchParams = new URLSearchParams(location.search);
+  const initialSearch = searchParams.get('search') || '';
+  const [search, setSearch] = useState(initialSearch);
   const [useCustomPricing, setUseCustomPricing] = useState(false);
   const [showDiscountConfirm, setShowDiscountConfirm] = useState(false);
   const [pendingPayload, setPendingPayload] = useState(null);
@@ -108,7 +112,7 @@ const Payments = () => {
   
   // Pagination State
   const [page, setPage] = useState(1);
-  const [limit] = useState(50);
+  const [limit] = useState(20);
   const [totalPages, setTotalPages] = useState(1);
   const [totalRecords, setTotalRecords] = useState(0);
   
@@ -134,13 +138,40 @@ const Payments = () => {
     paymentMethod: 'Cash',
   });
 
-  const user = JSON.parse(localStorage.getItem('user') || '{}');
+  let user = {};
+  try { user = JSON.parse(localStorage.getItem('user') || '{}'); } catch {}
   const isAdmin = user.role === 'ADMIN' || user.role === 'SUPER_ADMIN';
 
-  const location = useLocation();
-  const navigate = useNavigate();
+  const fetchData = useCallback(async () => {
+    setLoading(true);
+    try {
+      const [payRes, memRes, planRes, settingsRes] = await Promise.all([
+        api.get(`/payments?page=${page}&limit=${limit}`),
+        api.get('/members?limit=200'),
+        api.get('/plans'),
+        api.get('/settings').catch(() => ({ data: {} })),
+      ]);
+      setPayments(payRes.data.data || payRes.data.payments || payRes.data);
+      setTotalPages(payRes.data.totalPages || 1);
+      setTotalRecords(payRes.data.totalRecords || (payRes.data.data || payRes.data.payments || payRes.data).length);
+      setMembers(memRes.data.members || []);
+      setPlans(planRes.data);
+      setGymSettings(settingsRes.data);
+    } catch (err) {
+      toast.error(getErrorMessage(err) || 'Failed to load payment data');
+    } finally {
+      setLoading(false);
+    }
+  }, [page, limit]);
 
-  useEffect(() => { fetchData(); }, [page]);
+  useEffect(() => {
+    const q = new URLSearchParams(location.search).get('search');
+    if (q !== null) {
+      setSearch(q);
+    }
+  }, [location.search]);
+
+  useEffect(() => { fetchData(); }, [fetchData]);
 
   // Handle auto-opening the payment terminal (e.g. from MembersList Quick Actions)
   useEffect(() => {
@@ -169,27 +200,6 @@ const Payments = () => {
     }
   }, [loading, members.length, plans.length, location.state, navigate, location.pathname, plans]);
 
-  const fetchData = async () => {
-    setLoading(true);
-    try {
-      const [payRes, memRes, planRes, settingsRes] = await Promise.all([
-        api.get(`/payments?page=${page}&limit=${limit}`),
-        api.get('/members?limit=200'),
-        api.get('/plans'),
-        api.get('/settings').catch(() => ({ data: {} })),
-      ]);
-      setPayments(payRes.data.payments || payRes.data);
-      setTotalPages(payRes.data.totalPages || 1);
-      setTotalRecords(payRes.data.totalRecords || (payRes.data.payments || payRes.data).length);
-      setMembers(memRes.data.members || []);
-      setPlans(planRes.data);
-      setGymSettings(settingsRes.data);
-    } catch (err) {
-      toast.error(getErrorMessage(err) || 'Failed to load payment data');
-    } finally {
-      setLoading(false);
-    }
-  };
 
   const resetModal = () => {
     setUseCustomPricing(false);
@@ -259,24 +269,28 @@ const Payments = () => {
 
     if (!skipDuplicateCheck) {
       const selectedMem = members.find(m => m.id === newPayment.memberId);
-      if (selectedMem && selectedMem.status === 'ACTIVE') {
+      const hasActivePlan = selectedMem && selectedMem.valid_until && new Date(selectedMem.valid_until) >= new Date(new Date().setHours(0,0,0,0));
+      
+      if (selectedMem && hasActivePlan) {
         setPendingPayload(buildPayload());
         setDuplicateWarningData({
           currentPlan: selectedMem.plan_name || 'Active Plan',
           expiresAt: selectedMem.valid_until,
-          remainingDays: selectedMem.valid_until ? Math.ceil((new Date(selectedMem.valid_until) - new Date()) / (1000 * 60 * 60 * 24)) : 0
+          remainingDays: Math.ceil((new Date(selectedMem.valid_until) - new Date()) / (1000 * 60 * 60 * 24))
         });
         setShowDuplicateWarning(true);
         return;
       }
     }
 
+    const finalPayload = { ...buildPayload(), overrideExistingSubscription: skipDuplicateCheck };
+
     if (useCustomPricing && newPayment.amount < newPayment.originalPrice * 0.5) {
-      setPendingPayload(buildPayload());
+      setPendingPayload(finalPayload);
       setShowDiscountConfirm(true);
       return;
     }
-    await handleGeneratePayment(buildPayload());
+    await handleGeneratePayment(finalPayload);
   };
 
   // ── STEP 2 → STEP 3: Admin confirms payment received ───────────────────────
@@ -371,7 +385,7 @@ const Payments = () => {
               { label: 'Total Revenue', value: totalRevenue, icon: TrendingUp },
               { label: 'This Month',    value: thisMonth,    icon: Receipt },
             ].map(({ label, value, icon: Icon }) => (
-              <Card key={label} variant="flat" className="p-6 lg:p-8 flex items-center gap-5">
+              <Card key={label} variant="flat" className="p-4 sm:p-6 lg:p-8 flex items-center gap-3 sm:gap-5">
                 <div className="w-11 h-11 rounded-xl bg-white/[0.05] border border-white/[0.07] flex items-center justify-center text-earth-clay flex-shrink-0">
                   <Icon size={18} />
                 </div>
@@ -422,18 +436,25 @@ const Payments = () => {
               headers={[
                 { label: 'Amount',         className: 'flex-1' },
                 { label: 'Member',         className: 'flex-1' },
-                { label: 'Plan',           className: 'flex-1' },
+                { label: 'Plan',           className: 'flex-1 hidden sm:table-cell' },
                 { label: 'Pay Status',     className: 'w-28' },
-                { label: 'Validity',       className: 'w-36' },
+                { label: 'Validity',       className: 'w-36 hidden md:table-cell' },
                 { label: 'Invoice',        className: 'w-20 text-right' },
               ]}
               emptyMessage="No payment records found."
               emptyIcon={CreditCard}
             >
-              {filteredPayments.map((p) => (
-                <TableRow key={p.id}>
-                  {/* Amount */}
-                  <div className="flex-1 flex items-center gap-3">
+              {filteredPayments.map((p) => {
+                const highlightId = searchParams.get('highlight');
+                const isHighlighted = highlightId === p.id;
+                
+                return (
+                  <TableRow 
+                    key={p.id} 
+                    className={isHighlighted ? 'bg-earth-clay/10 ring-1 ring-earth-clay shadow-[inset_0_0_20px_rgba(194,107,54,0.2)] !border-transparent relative z-10 transition-all duration-1000' : ''}
+                  >
+                    {/* Amount */}
+                    <div className="flex-1 flex items-center gap-3">
                     <div className="w-9 h-9 rounded-xl bg-white/[0.04] flex items-center justify-center border border-white/[0.07] flex-shrink-0">
                       <IndianRupee size={14} className="text-earth-clay" />
                     </div>
@@ -457,12 +478,12 @@ const Payments = () => {
                   </div>
 
                   {/* Member */}
-                  <div className="flex-1">
-                    <p className="text-xs font-black text-slate-300 uppercase tracking-wide">{p.member_name}</p>
+                  <div className="flex-1 min-w-0 pr-4">
+                    <p className="text-xs font-black text-slate-300 uppercase tracking-wide truncate" title={p.member_name}>{p.member_name}</p>
                   </div>
 
                   {/* Plan */}
-                  <div className="flex-1">
+                  <div className="flex-1 hidden sm:block">
                     <p className="text-xs font-black text-earth-clay">{p.plan_name}</p>
                     <p className="text-[9px] text-slate-500 font-bold mt-0.5 uppercase">
                       {p.payment_mode?.replace('_', ' ')}
@@ -475,7 +496,7 @@ const Payments = () => {
                   </div>
 
                   {/* Membership Validity */}
-                  <div className="w-36">
+                  <div className="w-36 hidden md:block">
                     {p.payment_status === 'PENDING' ? (
                       <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg border text-[10px] font-black uppercase tracking-widest bg-amber-500/10 border-amber-500/25 text-amber-400">
                         <Clock size={10} />
@@ -498,7 +519,8 @@ const Payments = () => {
                     </button>
                   </div>
                 </TableRow>
-              ))}
+              );
+              })}
             </Table>
             
             {/* Pagination Controls */}
@@ -593,7 +615,7 @@ const Payments = () => {
                               style={{
                                 background: '#111111',
                                 border: '1px solid rgba(255,255,255,0.06)',
-                                maxHeight: '240px',
+                                maxHeight: 'min(240px, 40dvh)',
                                 overflowY: 'auto',
                               }}
                             >
@@ -864,7 +886,7 @@ const Payments = () => {
                       <p className="text-[10px] font-black text-slate-500 uppercase tracking-widest mb-2">Collect Payment Via</p>
                       <p className="text-2xl font-black text-ivory mb-1">{newPayment.paymentMethod}</p>
                       <p className="text-3xl font-black text-ivory mt-4">
-                        <span className="text-emerald-400 text-xl">₹</span>
+                        <span className="text-emerald-400 mr-1">₹</span>
                         {Number(newPayment.amount).toLocaleString('en-IN')}
                       </p>
                       <p className="text-xs text-slate-400 mt-3">from <span className="text-ivory font-bold">{selectedMember?.name}</span></p>
@@ -921,7 +943,7 @@ const Payments = () => {
                       <div className="pt-4">
                         <p className="text-[9px] font-black text-slate-600 uppercase tracking-widest mb-2 text-center">Amount Due</p>
                         <p className="text-4xl font-black text-ivory text-center tracking-tighter">
-                          <span className="text-emerald-400 text-xl mr-1">₹</span>
+                          <span className="text-emerald-400 mr-1">₹</span>
                           {Number(newPayment.amount).toLocaleString('en-IN')}
                         </p>
                       </div>

@@ -105,14 +105,14 @@ const detectInactiveMembers = async () => {
     const result = await db.query(`
       SELECT m.id, m.name, m.gym_id 
       FROM members m
-      LEFT JOIN (
-        SELECT member_id, MAX(check_in_time) as last_visit
-        FROM attendance
-        GROUP BY member_id
-      ) a ON m.id = a.member_id
       WHERE m.status = 'ACTIVE'
-      AND (a.last_visit < CURRENT_DATE - INTERVAL '14 days' OR a.last_visit IS NULL)
       AND m.created_at < CURRENT_DATE - INTERVAL '14 days'
+      AND NOT EXISTS (
+        SELECT 1 
+        FROM attendance a 
+        WHERE a.member_id = m.id 
+        AND a.check_in_time >= CURRENT_DATE - INTERVAL '14 days'
+      )
     `);
 
     const { eventBus, EVENTS } = require('../events/eventBus');
@@ -139,13 +139,15 @@ const sendRenewalReminders = async () => {
     const result = await db.query(`
       SELECT m.id, m.name, m.phone, m.gym_id, p.valid_until
       FROM members m
-      JOIN (
-        SELECT DISTINCT ON (member_id) member_id, valid_until
-        FROM payments
-        ORDER BY member_id, valid_until DESC
-      ) p ON m.id = p.member_id
+      JOIN payments p ON m.id = p.member_id
       WHERE m.status = 'ACTIVE'
       AND p.valid_until = CURRENT_DATE + INTERVAL '3 days'
+      AND NOT EXISTS (
+        SELECT 1 
+        FROM payments p2 
+        WHERE p2.member_id = m.id 
+        AND p2.valid_until > p.valid_until
+      )
     `);
 
     const { eventBus, EVENTS } = require('../events/eventBus');

@@ -49,7 +49,7 @@ const CommandPalette = () => {
     const timer = setTimeout(async () => {
       setIsLoading(true);
       try {
-        const res = await api.get(`/members?search=${query}&limit=5`);
+        const res = await api.get(`/members?search=${encodeURIComponent(query)}&limit=5`);
         const memberResults = (res.data.members || []).map(m => ({
           id: `mem-${m.id}`,
           title: m.name,

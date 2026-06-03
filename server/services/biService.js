@@ -19,16 +19,12 @@ const getKPISummary = async (gymId) => {
            COUNT(CASE WHEN status = 'EXPIRED' THEN 1 END) as expired
          FROM members WHERE gym_id = $1
        ),
-       revenue_stats AS (
+       payment_stats AS (
          SELECT 
            SUM(CASE WHEN payment_date >= CURRENT_DATE THEN amount ELSE 0 END) as today_revenue,
            SUM(CASE WHEN payment_date >= date_trunc('month', CURRENT_DATE) THEN amount ELSE 0 END) as this_month,
            SUM(CASE WHEN payment_date >= date_trunc('month', CURRENT_DATE - interval '1 month') 
-                    AND payment_date < date_trunc('month', CURRENT_DATE) THEN amount ELSE 0 END) as last_month
-         FROM payments WHERE gym_id = $1
-       ),
-       pricing_stats AS (
-         SELECT 
+                    AND payment_date < date_trunc('month', CURRENT_DATE) THEN amount ELSE 0 END) as last_month,
            COUNT(CASE WHEN pricing_type = 'CUSTOM' THEN 1 END) as custom_count,
            SUM(original_price - amount) as total_discounts
          FROM payments WHERE gym_id = $1
@@ -38,7 +34,7 @@ const getKPISummary = async (gymId) => {
            COUNT(DISTINCT member_id) as present_today
          FROM attendance WHERE gym_id = $1 AND check_in_time >= CURRENT_DATE
        )
-       SELECT * FROM member_stats, revenue_stats, pricing_stats, attendance_stats`,
+       SELECT * FROM member_stats, payment_stats, attendance_stats`,
       [gymId]
     );
 

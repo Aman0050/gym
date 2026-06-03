@@ -3,12 +3,17 @@ import api from '../services/api';
 import socket from '../services/socket';
 import toast from 'react-hot-toast';
 
+let isInitialized = false;
+
 export const useNotificationStore = create((set, get) => ({
   notifications: [],
   unreadCount: 0,
   isLoading: false,
 
   init: () => {
+    if (isInitialized) return;
+    isInitialized = true;
+
     let lastToastTime = 0;
     const TOAST_COOLDOWN = 2000;
 
@@ -34,6 +39,11 @@ export const useNotificationStore = create((set, get) => ({
         lastToastTime = now;
       }
     });
+
+    // Polling fallback to ensure notifications show up even if real-time sockets fail
+    setInterval(() => {
+      get().fetchNotifications();
+    }, 30000);
   },
 
   fetchNotifications: async () => {

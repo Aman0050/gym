@@ -20,6 +20,7 @@ class SocketService {
       } else {
         // Same token. Reconnect if disconnected.
         if (!this.socket.connected) {
+          this.socket.io.opts.reconnection = true; // Fix ghost disconnect!
           this.socket.connect();
         }
         return;
@@ -28,7 +29,7 @@ class SocketService {
 
     this.socket = io(SOCKET_URL, {
       auth: { token },
-      transports: ['websocket'], // Force WebSocket for production stability
+      transports: ['websocket'], // Force WebSocket (Phase 10)
       reconnection: true,
       reconnectionAttempts: Infinity, // Keep trying in production
       reconnectionDelay: 1000,
@@ -41,7 +42,7 @@ class SocketService {
     this.socket.connect();
 
     this.socket.on('connect', () => {
-      console.log('Real-time connection established');
+      if (import.meta.env.DEV) console.log('[Socket] Real-time connection established');
       useSocketStore.getState().setConnected(true);
     });
 

@@ -209,7 +209,7 @@ export const Modal = memo(({
             <div className={`absolute top-0 left-0 h-0.5 w-full bg-gradient-to-r ${variant === 'destructive' ? 'from-red-500/50 to-red-400/20' : 'from-earth-clay/50 to-earth-clay/20'}`} />
 
             {/* Modal Header */}
-            <div className="px-8 py-7 border-b border-white/[0.07] flex items-center justify-between bg-white/[0.02] flex-shrink-0">
+            <div className="px-5 sm:px-8 py-5 sm:py-7 border-b border-white/[0.07] flex items-center justify-between bg-white/[0.02] flex-shrink-0">
               <div className="flex items-center gap-4">
                 {onBack && (
                   <button
@@ -240,8 +240,10 @@ export const Modal = memo(({
               </button>
             </div>
             {/* Modal Body */}
-            <div className="p-8 overflow-y-auto premium-scrollbar flex-1">
-              {children}
+            <div className="px-5 sm:px-8 pt-5 sm:pt-8 overflow-y-auto premium-scrollbar flex-1">
+              <div className="pb-8">
+                {children}
+              </div>
             </div>
           </motion.div>
         </div>
@@ -330,35 +332,39 @@ export const Table = memo(({
   >
     <div className="absolute inset-0 rounded-[1.25rem] pointer-events-none border border-white/[0.04] z-0" />
     
-    <div className="overflow-auto premium-scrollbar relative z-10 w-full flex-1 min-h-0" style={{ maxHeight }}>
-      <table className="w-full text-left border-separate border-spacing-0 min-w-[600px]">
-        <thead className="sticky top-0 z-20">
-          <tr>
-            {headers.map((h, idx) => (
-              <th 
-                key={idx} 
-                className={`px-6 py-4 text-[11px] font-semibold text-slate-300 uppercase tracking-widest align-middle bg-obsidian/95 backdrop-blur-xl border-b border-white/[0.08] shadow-sm ${idx === 0 ? 'rounded-tl-[1.25rem]' : ''} ${idx === headers.length - 1 ? 'rounded-tr-[1.25rem]' : ''} ${h.className || ''}`}
-              >
-                {h.label}
-              </th>
-            ))}
-          </tr>
-        </thead>
-        <tbody className="divide-y divide-white/[0.04]">
-          {children}
-        </tbody>
-      </table>
-      
-      {(!children || (Array.isArray(children) && children.length === 0)) && (
-        <div className="py-12">
-          <EmptyState
-            icon={emptyIcon || Search}
-            title={emptyMessage}
-            description={emptyDescription || "No records match your current criteria. Try adjusting your filters or adding a new entry."}
-            action={emptyAction}
-          />
-        </div>
-      )}
+    <div className="relative">
+      <div className="overflow-auto premium-scrollbar relative z-10 w-full flex-1 min-h-0" style={{ maxHeight }}>
+        <table className="w-full text-left border-separate border-spacing-0 min-w-[600px]">
+          <thead className="sticky top-0 z-20">
+            <tr>
+              {headers.map((h, idx) => (
+                <th
+                  key={idx}
+                  className={`px-6 py-4 text-[11px] font-semibold text-slate-300 uppercase tracking-widest align-middle bg-obsidian/95 backdrop-blur-xl border-b border-white/[0.08] shadow-sm ${idx === 0 ? 'rounded-tl-[1.25rem]' : ''} ${idx === headers.length - 1 ? 'rounded-tr-[1.25rem] pr-10' : ''} ${h.className || ''}`}
+                >
+                  {h.label}
+                </th>
+              ))}
+            </tr>
+          </thead>
+          <tbody className="divide-y divide-white/[0.04]">
+            {children}
+          </tbody>
+        </table>
+
+        {(!children || (Array.isArray(children) && children.length === 0)) && (
+          <div className="py-12 flex-1 flex flex-col justify-center min-h-[300px]">
+            <EmptyState
+              icon={emptyIcon || Search}
+              title={emptyMessage}
+              description={emptyDescription || "No records match your current criteria. Try adjusting your filters or adding a new entry."}
+              action={emptyAction}
+            />
+          </div>
+        )}
+      </div>
+      {/* Mobile horizontal scroll fade hint — visible on <768px only */}
+      <div className="absolute right-0 top-0 bottom-0 w-8 bg-gradient-to-l from-[#060606]/80 to-transparent pointer-events-none md:hidden rounded-r-[1.25rem] z-20" />
     </div>
   </div>
 ));
@@ -382,7 +388,7 @@ export const TableRow = memo(({ children, className = '', onClick, isSelected = 
       `}
     >
       {React.Children.map(children, (child) => (
-        <td className="px-6 py-4 align-middle relative">
+        <td className="px-6 py-4 align-middle relative last:pr-10">
           {child}
         </td>
       ))}

@@ -28,15 +28,6 @@ const NotificationHub = ({ isOpen, onClose }) => {
     }
   }, [isOpen, fetchNotifications]);
 
-  // Auto-mark as read when opened
-  useEffect(() => {
-    if (isOpen && unreadCount > 0) {
-      const timer = setTimeout(() => {
-        markAllAsRead();
-      }, 1000);
-      return () => clearTimeout(timer);
-    }
-  }, [isOpen, unreadCount, markAllAsRead]);
 
   return (
     <AnimatePresence>
@@ -60,7 +51,7 @@ const NotificationHub = ({ isOpen, onClose }) => {
             className="fixed inset-y-0 right-0 w-full sm:w-[420px] bg-[#0a0a0a]/95 backdrop-blur-3xl border-l border-white/[0.08] z-[210] flex flex-col shadow-2xl"
           >
             {/* Header */}
-            <div className="px-8 py-8 border-b border-white/[0.05] flex items-center justify-between bg-white/[0.01]">
+            <div className="px-5 sm:px-8 py-6 sm:py-8 border-b border-white/[0.05] flex items-center justify-between bg-white/[0.01]">
               <div>
                 <div className="flex items-center gap-2.5 mb-1.5">
                   <Bell size={16} className="text-earth-clay" />
@@ -98,8 +89,15 @@ const NotificationHub = ({ isOpen, onClose }) => {
                         console.log("Notification Clicked", n);
                         if (!n.is_read) markAsRead(n.id);
                         if (n.action_url) {
-                          console.log("Navigating to:", n.action_url);
-                          navigate(n.action_url);
+                          let finalUrl = n.action_url;
+                          if (finalUrl === '/payments' && n.message?.startsWith('Revenue boost!')) {
+                            const match = n.message.match(/Revenue boost! (.*?) paid/);
+                            if (match && match[1]) {
+                              finalUrl = `/payments?search=${encodeURIComponent(match[1])}`;
+                            }
+                          }
+                          console.log("Navigating to:", finalUrl);
+                          navigate(finalUrl);
                           onClose();
                         }
                       }}
@@ -179,7 +177,7 @@ const NotificationHub = ({ isOpen, onClose }) => {
 
             {/* Footer */}
             {notifications.length > 0 && (
-              <div className="p-6 border-t border-white/[0.05] flex gap-3">
+              <div className="p-6 border-t border-white/[0.05] flex gap-3 pb-safe-area">
                 {unreadCount > 0 && (
                   <button
                     onClick={markAllAsRead}

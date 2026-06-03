@@ -13,6 +13,15 @@ const errorHandler = (err, req, res, next) => {
     user: req.user ? req.user.id : 'anonymous'
   });
 
+  // Handle detailed DB/starvation errors with 503
+  if (err.statusCode === 503) {
+    return res.status(503).json({
+      success: false,
+      status: 'fail',
+      message: err.message || 'Service temporarily unavailable.'
+    });
+  }
+
   // Handle specific DB errors gracefully
   if (err.code === '23505') { // Unique constraint violation
     err.statusCode = 400;

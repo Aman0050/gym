@@ -33,7 +33,7 @@ const BranchProfile = () => {
   
   const [showEditModal, setShowEditModal] = useState(false);
   const [showNotifyModal, setShowNotifyModal] = useState(false);
-  const [editForm, setEditForm] = useState({ name: '', phone: '', address: '', contact_person: '' });
+  const [editForm, setEditForm] = useState({ name: '', phone: '', address: '', contact_person: '', login_id: '', password: '' });
   const [notifyForm, setNotifyForm] = useState({ title: '', message: '', type: 'IN_APP' });
   const [isSubmitting, setIsSubmitting] = useState(false);
 
@@ -60,8 +60,8 @@ const BranchProfile = () => {
       setData(res.data);
       // Initialize live activities with latest payments/attendance
       const recent = [
-        ...res.data.payments.slice(0,5).map(p => ({ id: `p_${p.id}`, text: `Payment received: ₹${p.amount} from ${p.member_name}`, time: p.payment_date, icon: CreditCard, color: 'text-emerald-400' })),
-        ...res.data.attendanceStats.slice(0,5).map((a, i) => ({ id: `a_${i}`, text: `Member checked in`, time: a.check_in_time, icon: Activity, color: 'text-blue-400' }))
+        ...(res.data.payments || []).slice(0,5).map(p => ({ id: `p_${p.id}`, text: `Payment received: ₹${p.amount} from ${p.member_name}`, time: p.payment_date, icon: CreditCard, color: 'text-emerald-400' })),
+        ...(res.data.attendanceStats || []).slice(0,5).map((a, i) => ({ id: `a_${i}`, text: `Member checked in`, time: a.check_in_time, icon: Activity, color: 'text-blue-400' }))
       ].sort((a, b) => new Date(b.time) - new Date(a.time)).slice(0, 10);
       setLiveActivities(recent);
     } catch (err) {
@@ -91,7 +91,9 @@ const BranchProfile = () => {
         name: data.branch.name || '',
         phone: data.branch.phone || '',
         address: data.branch.address || '',
-        contact_person: data.branch.contact_person || ''
+        contact_person: data.branch.contact_person || '',
+        login_id: data.branch.login_id || '',
+        password: '' // empty so we don't send anything unless they type a new one
       });
       setShowEditModal(true);
     }
@@ -431,6 +433,23 @@ const BranchProfile = () => {
           <Input label="Branch Name" value={editForm.name} onChange={e => setEditForm({ ...editForm, name: e.target.value })} required />
           <Input label="Phone" value={editForm.phone} onChange={e => setEditForm({ ...editForm, phone: e.target.value })} required />
           <Input label="Manager / Contact" value={editForm.contact_person} onChange={e => setEditForm({ ...editForm, contact_person: e.target.value })} />
+          <div className="p-4 bg-earth-clay/5 border border-earth-clay/10 rounded-2xl space-y-5">
+            <h4 className="text-[10px] font-black text-earth-clay uppercase tracking-widest flex items-center gap-2">
+              <ShieldCheck size={14} /> Branch Login Credentials
+            </h4>
+            <Input 
+              label="Login ID (Username)" 
+              value={editForm.login_id} 
+              onChange={e => setEditForm({ ...editForm, login_id: e.target.value })} 
+            />
+            <Input 
+              label="New Password (Leave blank to keep current)" 
+              type="password"
+              value={editForm.password} 
+              onChange={e => setEditForm({ ...editForm, password: e.target.value })} 
+              placeholder="••••••••"
+            />
+          </div>
           <div className="space-y-3">
             <label className="label-text ml-2">Address</label>
             <textarea

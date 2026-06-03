@@ -43,7 +43,7 @@ const incrementStats = async (gymId, fields) => {
     const today = new Date().toISOString().split('T')[0];
     
     const setClause = Object.keys(fields)
-      .map((key) => `${key} = COALESCE(${key}, 0) + EXCLUDED.${key}`)
+      .map((key) => `${key} = COALESCE(daily_stats.${key}, 0) + EXCLUDED.${key}`)
       .join(', ');
 
     const query = `

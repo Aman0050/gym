@@ -1,12 +1,24 @@
 const db = require('../config/db');
+const { get, set, del, CACHE_TTL } = require('../services/cacheService');
 
 // GET /api/plans
 const getPlans = async (req, res) => {
+  const gymId = req.user.gym_id;
   try {
+    // Try Cache First
+    const cachedPlans = await get(gymId, 'plans_list');
+    if (cachedPlans) {
+      return res.json(cachedPlans);
+    }
+
     const result = await db.query(
       'SELECT * FROM plans WHERE gym_id = $1 AND is_active = true ORDER BY created_at DESC',
-      [req.user.gym_id]
+      [gymId]
     );
+
+    // Save to Cache for 300 seconds (Phase 11)
+    await set(gymId, 'plans_list', result.rows, CACHE_TTL.PLAN);
+
     res.json(result.rows);
   } catch (err) {
     res.status(500).json({ error: 'Failed to fetch plans' });
@@ -16,11 +28,16 @@ const getPlans = async (req, res) => {
 // POST /api/plans
 const createPlan = async (req, res) => {
   const { name, duration_days, price } = req.body;
+  const gymId = req.user.gym_id;
   try {
     const result = await db.query(
       'INSERT INTO plans (gym_id, name, duration_days, price) VALUES ($1, $2, $3, $4) RETURNING *',
-      [req.user.gym_id, name, duration_days, price]
+      [gymId, name, duration_days, price]
     );
+
+    // Invalidate Cache
+    await del(gymId, 'plans_list');
+
     res.status(201).json(result.rows[0]);
   } catch (err) {
     res.status(500).json({ error: 'Failed to create plan' });
@@ -40,6 +57,9 @@ const deletePlan = async (req, res) => {
     if (result.rows.length === 0) {
       return res.status(404).json({ error: 'Plan not found' });
     }
+
+    // Invalidate Cache
+    await del(gymId, 'plans_list');
 
     // Emit event for real-time sync
     const { eventBus } = require('../events/eventBus');
@@ -65,6 +85,9 @@ const updatePlan = async (req, res) => {
     if (result.rows.length === 0) {
       return res.status(404).json({ error: 'Plan not found' });
     }
+
+    // Invalidate Cache
+    await del(gymId, 'plans_list');
 
     // Emit event for real-time sync
     const { eventBus } = require('../events/eventBus');

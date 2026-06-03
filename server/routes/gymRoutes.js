@@ -2,6 +2,9 @@ const express = require('express');
 const router = express.Router();
 const { getGyms, createGym, updateGymStatus, getGlobalAnalytics, createGymAccount, checkGymIdAvailability, assignManager, getGymDetails, updateGym, notifyGym } = require('../controllers/gymController');
 const { protect, superAdminOnly } = require('../middlewares/authMiddleware');
+const { validateUuidParamMiddleware } = require('../middlewares/validateMiddleware');
+
+router.param('id', validateUuidParamMiddleware);
 
 // ── Public routes (no auth — called during onboarding flow) ──────────────────
 // POST /api/gym/create-account

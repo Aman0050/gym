@@ -45,57 +45,71 @@ const createPendingPayment = async (payload, gymId, adminId = null) => {
     throw new Error('Could not calculate payment expiry date (valid_until)');
   }
 
-  // ── Duplicate Membership Check ────────────────────────
-  if (!overrideExistingSubscription) {
-    const activeSubResult = await db.query(
-      `SELECT p.valid_until, p.payment_status, pl.name as plan_name 
-       FROM payments p 
-       LEFT JOIN plans pl ON p.plan_id = pl.id 
-       WHERE p.member_id = $1 AND p.gym_id = $2 
-       AND p.valid_until >= CURRENT_DATE 
-       AND p.payment_status IN ('PAID', 'PENDING')
-       ORDER BY p.valid_until DESC LIMIT 1`,
-      [memberId, gymId]
+  try {
+    await db.query('BEGIN');
+
+    // ── Concurrency Lock & Ownership Verification ─────────
+    const memberCheck = await db.query('SELECT id FROM members WHERE id = $1 AND gym_id = $2 FOR UPDATE', [memberId, gymId]);
+    if (memberCheck.rows.length === 0) {
+      throw new Error('Member not found in this gym');
+    }
+
+    // ── Duplicate Membership Check ────────────────────────
+    if (!overrideExistingSubscription) {
+      const activeSubResult = await db.query(
+        `SELECT p.valid_until, p.payment_status, pl.name as plan_name 
+         FROM payments p 
+         LEFT JOIN plans pl ON p.plan_id = pl.id 
+         WHERE p.member_id = $1 AND p.gym_id = $2 
+         AND p.valid_until >= CURRENT_DATE 
+         AND p.payment_status IN ('PAID', 'PENDING')
+         ORDER BY p.valid_until DESC LIMIT 1`,
+        [memberId, gymId]
+      );
+
+      if (activeSubResult.rows.length > 0) {
+        const activeSub = activeSubResult.rows[0];
+        const remainingDays = Math.ceil((new Date(activeSub.valid_until) - new Date()) / (1000 * 60 * 60 * 24));
+        
+        const error = new Error('Duplicate Subscription Detected');
+        error.isDuplicateWarning = true;
+        error.warningData = {
+          hasActiveSubscription: true,
+          currentPlan: activeSub.plan_name || 'Custom Plan',
+          expiresAt: activeSub.valid_until,
+          paymentStatus: activeSub.payment_status,
+          remainingDays: remainingDays > 0 ? remainingDays : 0,
+        };
+        throw error;
+      }
+    } else {
+      logger.warn(`Admin ${adminId} overrode duplicate subscription warning for member ${memberId}`);
+    }
+
+    // Insert payment with PENDING status
+    const result = await db.query(
+      `INSERT INTO payments (
+        gym_id, member_id, plan_id, amount, payment_mode,
+        valid_from, valid_until, original_price, pricing_type,
+        custom_duration_days, discount_reason, admin_id,
+        payment_status, paid_at, activated_at
+      )
+      VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, 'PENDING', NULL, NULL)
+      RETURNING *`,
+      [
+        gymId, memberId, planId, amount, normalizedPaymentMode,
+        validFrom, finalValidUntil, originalPrice || amount, pricingType,
+        customDurationDays, discountReason, adminId,
+      ]
     );
 
-    if (activeSubResult.rows.length > 0) {
-      const activeSub = activeSubResult.rows[0];
-      const remainingDays = Math.ceil((new Date(activeSub.valid_until) - new Date()) / (1000 * 60 * 60 * 24));
-      
-      const error = new Error('Duplicate Subscription Detected');
-      error.isDuplicateWarning = true;
-      error.warningData = {
-        hasActiveSubscription: true,
-        currentPlan: activeSub.plan_name || 'Custom Plan',
-        expiresAt: activeSub.valid_until,
-        paymentStatus: activeSub.payment_status,
-        remainingDays: remainingDays > 0 ? remainingDays : 0,
-      };
-      throw error;
-    }
-  } else {
-    logger.warn(`Admin ${adminId} overrode duplicate subscription warning for member ${memberId}`);
+    await db.query('COMMIT');
+    logger.info(`Pending payment created: ${result.rows[0].id} for member ${memberId}`);
+    return result.rows[0];
+  } catch (error) {
+    await db.query('ROLLBACK');
+    throw error;
   }
-
-  // Insert payment with PENDING status
-  const result = await db.query(
-    `INSERT INTO payments (
-      gym_id, member_id, plan_id, amount, payment_mode,
-      valid_from, valid_until, original_price, pricing_type,
-      custom_duration_days, discount_reason, admin_id,
-      payment_status, paid_at, activated_at
-    )
-    VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, 'PENDING', NULL, NULL)
-    RETURNING *`,
-    [
-      gymId, memberId, planId, amount, normalizedPaymentMode,
-      validFrom, finalValidUntil, originalPrice || amount, pricingType,
-      customDurationDays, discountReason, adminId,
-    ]
-  );
-
-  logger.info(`Pending payment created: ${result.rows[0].id} for member ${memberId}`);
-  return result.rows[0];
 };
 
 // ─────────────────────────────────────────────────────────────────────────────
@@ -106,59 +120,71 @@ const createPendingPayment = async (payload, gymId, adminId = null) => {
 const confirmPayment = async (paymentId, gymId, transactionReference = null) => {
   const now = new Date().toISOString();
 
-  // Fetch the pending payment
-  const fetchResult = await db.query(
-    `SELECT p.*, m.name as member_name, pl.name as plan_name
-     FROM payments p
-     JOIN members m ON p.member_id = m.id
-     LEFT JOIN plans pl ON p.plan_id = pl.id
-     WHERE p.id = $1 AND p.gym_id = $2`,
-    [paymentId, gymId]
-  );
-
-  if (fetchResult.rows.length === 0) {
-    throw new Error('Payment not found');
-  }
-
-  const payment = fetchResult.rows[0];
-
-  if (payment.payment_status === 'PAID') {
-    throw new Error('Payment already confirmed');
-  }
-
-  if (payment.payment_status === 'FAILED') {
-    throw new Error('Cannot confirm a failed payment');
-  }
-
-  // Mark as PAID + set timestamps
-  const updateResult = await db.query(
-    `UPDATE payments
-     SET payment_status = 'PAID',
-         paid_at = $1,
-         activated_at = $1,
-         transaction_reference = $2
-     WHERE id = $3
-     RETURNING *`,
-    [now, transactionReference, paymentId]
-  );
-
-  const confirmedPayment = updateResult.rows[0];
-
-  // Generate Invoice Record — wrapped so it never crashes confirm
+  let confirmedPayment;
   try {
+    await db.query('BEGIN');
+
+    // Fetch and lock the pending payment inside the transaction
+    const fetchResult = await db.query(
+      `SELECT p.*, m.name as member_name, pl.name as plan_name
+       FROM payments p
+       JOIN members m ON p.member_id = m.id
+       LEFT JOIN plans pl ON p.plan_id = pl.id
+       WHERE p.id = $1 AND p.gym_id = $2 FOR UPDATE OF p`,
+      [paymentId, gymId]
+    );
+
+    if (fetchResult.rows.length === 0) {
+      throw new Error('Payment not found');
+    }
+
+    const payment = fetchResult.rows[0];
+
+    if (payment.payment_status === 'PAID') {
+      throw new Error('Payment already confirmed');
+    }
+
+    if (payment.payment_status === 'FAILED') {
+      throw new Error('Cannot confirm a failed payment');
+    }
+
+    // Mark as PAID + set timestamps
+    const updateResult = await db.query(
+      `UPDATE payments
+       SET payment_status = 'PAID',
+           paid_at = $1,
+           activated_at = $1,
+           transaction_reference = $2
+       WHERE id = $3
+       RETURNING *`,
+      [now, transactionReference, paymentId]
+    );
+
+    confirmedPayment = updateResult.rows[0];
+
+    // Generate Invoice Record
     await db.query(
       `INSERT INTO invoices (gym_id, member_id, payment_id, invoice_number, amount)
-       VALUES ($1, $2, $3, $4, $5)
-       ON CONFLICT DO NOTHING`,
+       VALUES ($1, $2, $3, $4, $5)`,
       [gymId, payment.member_id, paymentId, `INV-${Date.now()}`, payment.amount]
     );
-  } catch (invoiceErr) {
-    logger.warn(`Invoice creation skipped for payment ${paymentId}: ${invoiceErr.message}`);
+
+    await db.query('COMMIT');
+  } catch (error) {
+    await db.query('ROLLBACK');
+    logger.error(`Confirm payment failed for ${paymentId}: ${error.message}`);
+    
+    // If the error is a unique constraint violation on transaction reference
+    if (error.code === '23505' && error.constraint === 'idx_payments_unique_txn') {
+      throw new Error('This Transaction Reference has already been used.');
+    }
+    throw error;
   }
 
   // Notify Staff — wrapped so notification failures never block confirmation
   try {
-    await notificationService.notifyPaymentSuccess(gymId, payment.member_name, payment.amount);
+    const notificationService = require('./notificationService');
+    await notificationService.notifyPaymentSuccess(gymId, payment.member_name, payment.amount, paymentId);
   } catch (notifyErr) {
     logger.warn(`Notification skipped for payment ${paymentId}: ${notifyErr.message}`);
   }
@@ -216,6 +242,12 @@ const verifyAndRecordPayment = async (payload, gymId, adminId = null) => {
 
   const normalizedPaymentMode = paymentMethod.toUpperCase().replace(/\s+/g, '_');
 
+  // Ownership Verification (Phase 14)
+  const memberResult = await db.query('SELECT name FROM members WHERE id = $1 AND gym_id = $2', [memberId, gymId]);
+  if (memberResult.rows.length === 0) {
+    throw new Error('Member not found in this gym');
+  }
+
   const sign = razorpay_order_id + '|' + razorpay_payment_id;
   const expectedSign = crypto
     .createHmac('sha256', process.env.RAZORPAY_KEY_SECRET || 'secret_placeholder')
@@ -270,7 +302,6 @@ const verifyAndRecordPayment = async (payload, gymId, adminId = null) => {
     [gymId, memberId, paymentResult.rows[0].id, `INV-${Date.now()}`, amount]
   );
 
-  const memberResult = await db.query('SELECT name FROM members WHERE id = $1', [memberId]);
   if (memberResult.rows.length > 0) {
     notificationService.notifyPaymentSuccess(gymId, memberResult.rows[0].name, amount);
   }
