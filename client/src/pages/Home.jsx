@@ -275,13 +275,7 @@ const Home = () => {
                               </span>
                            </div>
                            
-                           {billingOptions.find(o => o.id === billingCycle).savings && (
-                              <div className="inline-flex items-center space-x-2 bg-emerald-500/10 border border-emerald-500/20 px-3 py-1 rounded-full">
-                                 <span className="text-[8px] font-black text-emerald-400 uppercase tracking-widest">
-                                   {billingOptions.find(o => o.id === billingCycle).savings} Included
-                                 </span>
-                              </div>
-                           )}
+
                         </div>
 
                         <div className="flex flex-col gap-3">
