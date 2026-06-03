@@ -17,9 +17,9 @@ const Home = () => {
   const [billingCycle, setBillingCycle] = useState('monthly');
 
   const billingOptions = [
-    { id: 'monthly', label: 'Monthly', price: '2,499', period: '/mo', savings: null },
-    { id: 'quarterly', label: 'Quarterly', price: '6,749', period: 'total', savings: '10%' },
-    { id: 'yearly', label: 'Yearly', price: '20,999', period: 'total', savings: '30%' }
+    { id: 'monthly', label: 'Monthly', price: '1,999', period: '/mo', savings: null },
+    { id: 'quarterly', label: 'Quarterly', price: '4,999', period: 'total', savings: '16%' },
+    { id: 'yearly', label: 'Yearly', price: '14,999', period: 'total', savings: '37%' }
   ];
 
   const features = [
