@@ -19,6 +19,7 @@ const Home = () => {
   const billingOptions = [
     { id: 'monthly', label: 'Monthly', price: '1,999', period: '/mo', savings: null },
     { id: 'quarterly', label: 'Quarterly', price: '4,999', period: 'total', savings: '16%' },
+    { id: 'half-yearly', label: 'Half Yearly', price: '8,999', period: 'total', savings: '25%' },
     { id: 'yearly', label: 'Yearly', price: '14,999', period: 'total', savings: '37%' }
   ];
 
