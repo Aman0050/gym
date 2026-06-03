@@ -42,7 +42,7 @@ const recordAttendance = async (memberId, gymId) => {
          (SELECT json_agg(h) FROM (SELECT check_in_time FROM attendance WHERE member_id = tm.id AND gym_id = tm.gym_id ORDER BY check_in_time DESC LIMIT 3) h) as history
        FROM target_member tm
        LEFT JOIN attendance a ON tm.id = a.member_id AND a.gym_id = tm.gym_id
-       GROUP BY tm.id
+       GROUP BY tm.id, tm.gym_id
      ),
      streak_calc AS (
        SELECT count(*) as streak FROM (
