@@ -16,6 +16,7 @@ const Attendance = () => {
   const navigate = useNavigate();
   const [manualId, setManualId] = useState('');
   const [loading, setLoading] = useState(false);
+  const isCheckingIn = React.useRef(false);
   
   // Persist last checked-in member permanently in state & localStorage
   const [lastCheckin, setLastCheckin] = useState(() => {
@@ -46,13 +47,16 @@ const Attendance = () => {
   }, [loading, resolutionData]);
 
   const handleCheckin = async (memberId) => {
-    if (loading || !memberId) return;
+    if (loading || isCheckingIn.current || !memberId) return;
+    
+    isCheckingIn.current = true;
     setLoading(true);
+    setManualId(''); // Clear immediately to prevent double scan of same string
+    
     try {
       const res = await api.post('/attendance/check-in', { memberId });
       if (navigator.vibrate) navigator.vibrate([10, 30, 10]);
       setLastCheckin(res.data);
-      setManualId('');
       setResolutionData(null);
       toast.success(`Check-in successful for ${res.data.member?.name || 'Member'}`);
     } catch (err) {
@@ -76,6 +80,8 @@ const Attendance = () => {
       }
     } finally {
       setLoading(false);
+      // Give a tiny delay before allowing the next scan to prevent hardware scanner bounce
+      setTimeout(() => { isCheckingIn.current = false; }, 800);
     }
   };
 

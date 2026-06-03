@@ -104,6 +104,36 @@ const buildMemberReportData = (rawMembers) => {
   }));
 };
 
+const buildPaymentReportData = (rawPayments) => {
+  return rawPayments.map((p) => ({
+    'Transaction ID':       p.id,
+    'Branch Name':          sanitize(p.gym_name),
+    'Member Name':          sanitize(p.member_name),
+    'Plan Name':            sanitize(p.plan_name),
+    'Amount':               formatCurrency(p.amount),
+    'Status':               sanitize(p.payment_status, 'PAID'),
+    'Method':               sanitize(p.payment_method, 'CASH'),
+    'Date':                 formatDate(p.payment_date),
+  }));
+};
+
+const buildAttendanceReportData = (rawAttendance) => {
+  return rawAttendance.map((a) => ({
+    'Branch Name':          sanitize(a.gym_name),
+    'Member Name':          sanitize(a.member_name),
+    'Member Phone':         formatPhone(a.member_phone),
+    'Check-in Time':        formatDate(a.check_in_time) + ' ' + new Date(a.check_in_time).toLocaleTimeString('en-IN'),
+  }));
+};
+
+const buildSubscriptionReportData = (rawPlans) => {
+  return rawPlans.map((p) => ({
+    'Plan Name':            sanitize(p.name),
+    'Duration (Months)':    p.duration_months || 1,
+    'Price':                formatCurrency(p.price),
+  }));
+};
+
 // ─── XLSX Builder ─────────────────────────────────────────────────────────────
 
 /**
@@ -343,6 +373,9 @@ const buildMeta = ({ gymName, adminName, totalCount, filters }) => {
 
 module.exports = {
   buildMemberReportData,
+  buildPaymentReportData,
+  buildAttendanceReportData,
+  buildSubscriptionReportData,
   buildXLSXWorkbook,
   buildCSVReport,
   buildFilename,

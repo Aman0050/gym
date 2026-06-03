@@ -129,7 +129,8 @@ const getLimiterStore = (prefix) => {
   return new RedisStore({
     sendCommand: async (...args) => {
       if (redisConnection.status !== 'ready') {
-        throw new Error('Redis is offline');
+        // Fallback gracefully instead of throwing an error that crashes nodemon
+        return;
       }
       return await redisConnection.call(...args);
     },
@@ -195,6 +196,8 @@ app.use('/api/demo', require('./routes/demoRoutes'));
 app.use('/api/search', require('./routes/searchRoutes'));
 app.use('/api/notifications', require('./routes/notificationRoutes'));
 app.use('/api/settings', require('./routes/settingsRoutes'));
+app.use('/api/admin/backups', require('./routes/backupRoutes'));
+app.use('/api/admin/exports', require('./routes/exportRoutes'));
 
 
 // 6. Operational Health Hub

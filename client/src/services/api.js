@@ -15,11 +15,12 @@ axiosRetry(api, {
   retryCondition: (error) => {
     // Never retry payment mutation endpoints — non-idempotent
     const url = error.config?.url || '';
-    const isPaymentMutation =
+    const isNonIdempotentMutation =
       url.includes('/payments/confirm') ||
       url.includes('/payments/create-pending') ||
-      url.includes('/payments/verify');
-    if (isPaymentMutation) return false;
+      url.includes('/payments/verify') ||
+      url.includes('/attendance/check-in');
+    if (isNonIdempotentMutation) return false;
 
     // Only retry true network errors, NOT 5xx server errors on mutations
     const isNetworkError = axiosRetry.isNetworkError(error);

@@ -23,7 +23,9 @@ const recordAttendance = async (req, res) => {
     logger.error('Check-in error:', error.message);
 
     // Determine the right HTTP status
-    const statusCode = error.blockCode === 'PAYMENT_PENDING' ? 402 : 400;
+    let statusCode = 400;
+    if (error.blockCode === 'PAYMENT_PENDING') statusCode = 402;
+    if (error.isDuplicate) statusCode = 409;
 
     res.status(statusCode).json({
       error: typeof error.message === 'string' ? error.message : 'Check-in failed',

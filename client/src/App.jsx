@@ -22,7 +22,9 @@ const Gyms       = lazy(() => import('./pages/Gyms'));
 const BranchProfile = lazy(() => import('./pages/BranchProfile'));
 const SupportDashboard = lazy(() => import('./pages/SupportDashboard'));
 const SupportTicketDetails = lazy(() => import('./pages/SupportTicketDetails'));
-
+const PrivacyPolicy = lazy(() => import('./pages/legal/PrivacyPolicy'));
+const TermsOfService = lazy(() => import('./pages/legal/TermsOfService'));
+const RefundPolicy = lazy(() => import('./pages/legal/RefundPolicy'));
 import CommandPalette from './components/ui/CommandPalette';
 import GlobalSocketListener from './components/GlobalSocketListener';
 
@@ -47,7 +49,9 @@ function App() {
           <Route path="/about" element={<About />} />
           <Route path="/contact" element={<Contact />} />
           <Route path="/login" element={!isAuthenticated ? <Login /> : <Navigate to="/dashboard" replace />} />
-
+          <Route path="/privacy" element={<PrivacyPolicy />} />
+          <Route path="/terms" element={<TermsOfService />} />
+          <Route path="/refund-policy" element={<RefundPolicy />} />
           {/* Protected — wrapped by Layout (which now owns the Toaster) */}
           <Route element={isAuthenticated ? <Layout /> : <Navigate to="/login" replace />}>
             <Route path="/dashboard" element={isSuperAdmin ? <SuperAdminDashboard /> : <Dashboard />} />

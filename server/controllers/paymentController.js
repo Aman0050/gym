@@ -137,6 +137,18 @@ const getPaymentHistory = async (req, res) => {
     const totalRecords = parseInt(countResult.rows[0].total || 0);
     const totalPages = Math.ceil(totalRecords / limit);
 
+    // Calculate Global Revenue Stats
+    const revenueResult = await db.query(
+      `SELECT 
+         COALESCE(SUM(amount), 0) as total_revenue,
+         COALESCE(SUM(CASE WHEN payment_date >= date_trunc('month', CURRENT_DATE) THEN amount ELSE 0 END), 0) as monthly_revenue
+       FROM payments 
+       WHERE gym_id = $1 AND (payment_status IS NULL OR payment_status = 'PAID')`,
+      [gymId]
+    );
+    const totalRevenue = parseFloat(revenueResult.rows[0].total_revenue);
+    const monthlyRevenue = parseFloat(revenueResult.rows[0].monthly_revenue);
+
     const result = await db.query(
       `SELECT p.*, m.name as member_name, m.phone as member_phone, pl.name as plan_name
        FROM payments p
@@ -149,12 +161,17 @@ const getPaymentHistory = async (req, res) => {
     );
 
     res.json({
-      data: result.rows,
-      payments: result.rows, // fallback for legacy safety
-      page,
-      limit,
+      payments: result.rows,
+      data: result.rows, // fallback for legacy safety
+      totalRecords,
       totalPages,
-      totalRecords
+      currentPage: page,
+      hasNextPage: page < totalPages,
+      hasPreviousPage: page > 1,
+      page, // fallback for legacy safety
+      limit, // fallback for legacy safety
+      totalRevenue,
+      monthlyRevenue
     });
   } catch (err) {
     res.status(500).json({ error: 'Failed to fetch payments' });

@@ -23,15 +23,19 @@ const SuperAdminDashboard = () => {
   const [assigningManagerId, setAssigningManagerId] = useState(null);
   const [managerName, setManagerName] = useState('');
   const [savingManager, setSavingManager] = useState(false);
+  const [backupStatus, setBackupStatus] = useState(null);
+  const [triggeringBackup, setTriggeringBackup] = useState(false);
 
   const fetchData = useCallback(async () => {
     try {
-      const [statsRes, gymsRes] = await Promise.all([
+      const [statsRes, gymsRes, backupRes] = await Promise.all([
         api.get('/gyms/analytics/global'),
         api.get('/gyms'),
+        api.get('/admin/backups/status').catch(() => ({ data: { recentLogs: [], lastSuccessful: {} } }))
       ]);
       setStats(statsRes.data);
       setGyms(gymsRes.data);
+      setBackupStatus(backupRes.data);
     } catch (err) {
       toast.error('Failed to load platform data');
     } finally {
@@ -68,6 +72,36 @@ const SuperAdminDashboard = () => {
       toast.error('Failed to assign manager');
     } finally {
       setSavingManager(false);
+    }
+  };
+
+  const handleTriggerBackup = async () => {
+    setTriggeringBackup(true);
+    try {
+      await api.post('/admin/backups/trigger');
+      toast.success('Manual backup triggered. It will complete in the background.');
+      setTimeout(fetchData, 3000); // refresh status after a short delay
+    } catch (err) {
+      toast.error('Failed to trigger backup');
+    } finally {
+      setTriggeringBackup(false);
+    }
+  };
+
+  const downloadExport = async (endpoint, filename) => {
+    try {
+      const toastId = toast.loading(`Preparing ${filename}...`);
+      const response = await api.get(endpoint, { responseType: 'blob' });
+      const url = window.URL.createObjectURL(new Blob([response.data]));
+      const link = document.createElement('a');
+      link.href = url;
+      link.setAttribute('download', filename);
+      document.body.appendChild(link);
+      link.click();
+      link.parentNode.removeChild(link);
+      toast.success('Export downloaded successfully', { id: toastId });
+    } catch (err) {
+      toast.error('Failed to download export');
     }
   };
 
@@ -137,6 +171,80 @@ const SuperAdminDashboard = () => {
             </FadeIn>
           ))}
         </div>
+
+        {/* ── Backup Monitoring & Exports ── */}
+        <FadeIn direction="up" delay={0.15} duration={0.4}>
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-8">
+            <Card className="p-6 bg-white/[0.02] border border-white/[0.05]">
+              <div className="flex justify-between items-start mb-6">
+                <div>
+                  <h3 className="text-lg font-bold text-ivory flex items-center gap-2">
+                    <ShieldCheck size={20} className="text-emerald-400" />
+                    Data Protection Engine
+                  </h3>
+                  <p className="text-sm text-slate-400 mt-1">
+                    Logical database backups via Supabase & pg_dump
+                  </p>
+                </div>
+                <Button variant="secondary" size="sm" onClick={handleTriggerBackup} loading={triggeringBackup}>
+                  Run Manual Backup
+                </Button>
+              </div>
+              
+              <div className="space-y-4">
+                <div className="flex justify-between items-center p-3 rounded-xl bg-white/[0.03] border border-white/[0.05]">
+                  <div>
+                    <p className="text-xs font-bold text-slate-400 uppercase">Daily Backup</p>
+                    <p className="text-sm text-ivory mt-1">
+                      {backupStatus?.lastSuccessful?.DAILY ? new Date(backupStatus.lastSuccessful.DAILY).toLocaleString() : 'No recent backup'}
+                    </p>
+                  </div>
+                  {backupStatus?.lastSuccessful?.DAILY && new Date() - new Date(backupStatus.lastSuccessful.DAILY) < 86400000 * 2 ? (
+                    <CheckCircle size={20} className="text-emerald-400" />
+                  ) : (
+                    <AlertCircle size={20} className="text-amber-400" />
+                  )}
+                </div>
+                
+                <div className="flex justify-between items-center p-3 rounded-xl bg-white/[0.03] border border-white/[0.05]">
+                  <div>
+                    <p className="text-xs font-bold text-slate-400 uppercase">Weekly Backup</p>
+                    <p className="text-sm text-ivory mt-1">
+                      {backupStatus?.lastSuccessful?.WEEKLY ? new Date(backupStatus.lastSuccessful.WEEKLY).toLocaleString() : 'No recent backup'}
+                    </p>
+                  </div>
+                </div>
+              </div>
+            </Card>
+
+            <Card className="p-6 bg-white/[0.02] border border-white/[0.05]">
+              <div className="mb-6">
+                <h3 className="text-lg font-bold text-ivory flex items-center gap-2">
+                  <BarChart3 size={20} className="text-earth-clay" />
+                  Enterprise Data Exports
+                </h3>
+                <p className="text-sm text-slate-400 mt-1">
+                  Export global platform data for external analysis
+                </p>
+              </div>
+              
+              <div className="grid grid-cols-2 gap-4">
+                <Button variant="secondary" onClick={() => downloadExport('/members/export/csv?format=csv', 'Global_Members.csv')} className="w-full flex items-center justify-center gap-2 !py-4 border-dashed border-white/20">
+                  Export Members
+                </Button>
+                <Button variant="secondary" onClick={() => downloadExport('/admin/exports/payments?format=csv', 'Global_Payments.csv')} className="w-full flex items-center justify-center gap-2 !py-4 border-dashed border-white/20">
+                  Export Payments
+                </Button>
+                <Button variant="secondary" onClick={() => downloadExport('/admin/exports/attendance?format=csv', 'Global_Attendance.csv')} className="w-full flex items-center justify-center gap-2 !py-4 border-dashed border-white/20">
+                  Export Attendance
+                </Button>
+                <Button variant="secondary" onClick={() => downloadExport('/admin/exports/subscriptions?format=csv', 'Global_Subscriptions.csv')} className="w-full flex items-center justify-center gap-2 !py-4 border-dashed border-white/20">
+                  Export Subscriptions
+                </Button>
+              </div>
+            </Card>
+          </div>
+        </FadeIn>
 
         {/* ── Branch Directory ── */}
         <FadeIn direction="up" delay={0.25} duration={0.4}>

@@ -147,8 +147,10 @@ const recordAttendance = async (memberId, gymId) => {
   );
 
   if (recentCheck.rows.length > 0) {
-    logger.info(`Idempotent check-in triggered for member ${member.name} (${member.id})`);
-    return { member, attendance: recentCheck.rows[0], intelligence };
+    logger.warn(`Duplicate check-in attempt blocked for member ${member.name} (${member.id})`);
+    const duplicateError = new Error('Attendance already recorded.');
+    duplicateError.isDuplicate = true;
+    throw duplicateError;
   }
 
   // 5. Record Check-in (Using atomic transaction wrapper if needed, but simple INSERT is fine here)

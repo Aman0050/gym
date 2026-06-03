@@ -44,8 +44,9 @@ const PublicFooter = () => {
           <div>
             <h4 className="text-white font-black uppercase tracking-widest text-[10px] mb-6">Legal</h4>
             <ul className="space-y-4">
-              <li><a href="#" className="text-[12px] text-slate-400 hover:text-earth-clay transition-colors">Privacy Policy</a></li>
-              <li><a href="#" className="text-[12px] text-slate-400 hover:text-earth-clay transition-colors">Terms of Service</a></li>
+              <li><Link to="/privacy" className="text-[12px] text-slate-400 hover:text-earth-clay transition-colors">Privacy Policy</Link></li>
+              <li><Link to="/terms" className="text-[12px] text-slate-400 hover:text-earth-clay transition-colors">Terms of Service</Link></li>
+              <li><Link to="/refund-policy" className="text-[12px] text-slate-400 hover:text-earth-clay transition-colors">Refund Policy</Link></li>
             </ul>
           </div>
         </div>

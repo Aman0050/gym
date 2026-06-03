@@ -116,6 +116,8 @@ const Payments = () => {
   const [limit] = useState(20);
   const [totalPages, setTotalPages] = useState(1);
   const [totalRecords, setTotalRecords] = useState(0);
+  const [paginationInfo, setPaginationInfo] = useState({ hasNextPage: false, hasPreviousPage: false, currentPage: 1 });
+  const [globalRevenue, setGlobalRevenue] = useState({ total: 0, monthly: 0 });
   
   // Duplicate Protection State
   const [showDuplicateWarning, setShowDuplicateWarning] = useState(false);
@@ -152,9 +154,18 @@ const Payments = () => {
         api.get('/plans'),
         api.get('/settings').catch(() => ({ data: {} })),
       ]);
-      setPayments(payRes.data.data || payRes.data.payments || payRes.data);
+      setPayments(payRes.data.payments || payRes.data.data || payRes.data);
       setTotalPages(payRes.data.totalPages || 1);
-      setTotalRecords(payRes.data.totalRecords || (payRes.data.data || payRes.data.payments || payRes.data).length);
+      setTotalRecords(payRes.data.totalRecords || (payRes.data.payments || payRes.data.data || payRes.data).length);
+      setPaginationInfo({
+        hasNextPage: payRes.data.hasNextPage || false,
+        hasPreviousPage: payRes.data.hasPreviousPage || false,
+        currentPage: payRes.data.currentPage || page
+      });
+      setGlobalRevenue({
+        total: payRes.data.totalRevenue || 0,
+        monthly: payRes.data.monthlyRevenue || 0
+      });
       setMembers(memRes.data.members || []);
       setPlans(planRes.data);
       setGymSettings(settingsRes.data);
@@ -324,16 +335,9 @@ const Payments = () => {
 
   const filteredPayments = payments || [];
 
-  // Stats — only count PAID payments in revenue
-  const totalRevenue = payments
-    .filter(p => !p.payment_status || p.payment_status === 'PAID')
-    .reduce((sum, p) => sum + parseFloat(p.amount || 0), 0);
-  const thisMonth = payments.filter((p) => {
-    if (p.payment_status && p.payment_status !== 'PAID') return false;
-    const d = new Date(p.payment_date);
-    const now = new Date();
-    return d.getMonth() === now.getMonth() && d.getFullYear() === now.getFullYear();
-  }).reduce((sum, p) => sum + parseFloat(p.amount || 0), 0);
+  // Stats — now powered directly from the backend, correctly accounting for all records, not just the current page
+  const totalRevenue = globalRevenue.total;
+  const thisMonth = globalRevenue.monthly;
 
   const selectedMember = members.find(m => m.id === newPayment.memberId);
   const selectedPlan = plans.find(p => p.id === newPayment.planId);
@@ -543,7 +547,7 @@ const Payments = () => {
                   <Button 
                     variant="secondary" 
                     className="!py-2 !px-4 !text-[10px]"
-                    disabled={page === 1}
+                    disabled={!paginationInfo.hasPreviousPage}
                     onClick={() => setPage(p => Math.max(1, p - 1))}
                   >
                     Previous
@@ -551,7 +555,7 @@ const Payments = () => {
                   <Button 
                     variant="secondary" 
                     className="!py-2 !px-4 !text-[10px]"
-                    disabled={page === totalPages}
+                    disabled={!paginationInfo.hasNextPage}
                     onClick={() => setPage(p => Math.min(totalPages, p + 1))}
                   >
                     Next
