@@ -160,7 +160,7 @@ const About = () => {
         </section>
 
         {/* ── THE PROBLEMS WE SOLVE ── */}
-        <section className="py-20 lg:py-32 relative bg-gradient-to-b from-transparent via-black/20 to-transparent">
+        <section className="py-24 sm:py-32 lg:py-40 relative bg-gradient-to-b from-transparent via-black/20 to-transparent">
            <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
               <div className="mb-16 lg:mb-20 text-center">
                  <h2 className="text-4xl lg:text-5xl font-black text-white mb-4 tracking-tighter">
@@ -196,7 +196,7 @@ const About = () => {
         </section>
 
         {/* ── ENTERPRISE-GRADE INFRASTRUCTURE ── */}
-        <section className="py-20 lg:py-32 relative bg-gradient-to-b from-transparent to-black/20">
+        <section className="py-24 sm:py-32 lg:py-40 relative bg-gradient-to-b from-transparent to-black/20">
            <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
               <div className="grid lg:grid-cols-2 gap-16 lg:gap-24 items-center">
                  <motion.div 
@@ -263,7 +263,7 @@ const About = () => {
         </section>
 
         {/* ── THE FUTURE ROADMAP ── */}
-        <section className="py-20 lg:py-32 relative bg-transparent">
+        <section className="py-24 sm:py-32 lg:py-40 relative bg-transparent">
            <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
               <div className="text-center mb-16 lg:mb-20">
                  <h2 className="text-4xl lg:text-5xl font-black text-white mb-4 tracking-tighter">
@@ -300,7 +300,7 @@ const About = () => {
         </section>
 
         {/* ── FINAL CTA ── */}
-        <section className="py-20 lg:py-32 relative overflow-hidden bg-gradient-to-b from-transparent via-obsidian to-obsidian">
+        <section className="py-24 sm:py-32 lg:py-40 relative overflow-hidden bg-gradient-to-b from-transparent via-obsidian to-obsidian">
           <div className="absolute inset-0 z-0 pointer-events-none">
              <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-full max-w-[800px] h-[400px] bg-earth-clay/15 blur-[180px] rounded-full" />
           </div>

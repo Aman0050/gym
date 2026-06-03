@@ -125,14 +125,22 @@ const recordAttendance = async (memberId, gymId) => {
   if (intelligence.monthlyVisits > 20) intelligence.alerts.push({ type: 'VIP', message: 'High attendance: VIP Member' });
   if (new Date(member.join_date) > new Date(Date.now() - 7 * 24 * 60 * 60 * 1000)) intelligence.alerts.push({ type: 'NEW', message: 'New Member: Welcome!' });
 
-  // 4. Idempotency Check (Prevent duplicate scans within 5 minutes or on the same calendar day)
+  // 4. Idempotency Check (Prevent duplicate scans within 5 minutes)
+  const redisConnection = require('../config/redis');
+  if (redisConnection.status === 'ready') {
+    const lockKey = `lock:attendance:${gymId}:${member.id}`;
+    // SETNX with 10 seconds expiration to prevent race conditions
+    const acquired = await redisConnection.set(lockKey, 'locked', 'NX', 'EX', 10);
+    if (!acquired) {
+      logger.warn(`Idempotency lock triggered: Rapid double-scan blocked for ${member.name}`);
+      throw new Error('Please wait before checking in again');
+    }
+  }
+
   const recentCheck = await db.query(
     `SELECT * FROM attendance 
      WHERE member_id = $1 AND gym_id = $2 
-     AND (
-       check_in_time > NOW() - INTERVAL '5 minutes'
-       OR DATE(check_in_time) = CURRENT_DATE
-     )
+     AND check_in_time > NOW() - INTERVAL '5 minutes'
      ORDER BY check_in_time DESC
      LIMIT 1`,
     [member.id, gymId]

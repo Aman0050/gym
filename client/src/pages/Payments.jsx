@@ -104,6 +104,7 @@ const Payments = () => {
   const searchParams = new URLSearchParams(location.search);
   const initialSearch = searchParams.get('search') || '';
   const [search, setSearch] = useState(initialSearch);
+  const [debouncedSearch, setDebouncedSearch] = useState(initialSearch);
   const [useCustomPricing, setUseCustomPricing] = useState(false);
   const [showDiscountConfirm, setShowDiscountConfirm] = useState(false);
   const [pendingPayload, setPendingPayload] = useState(null);
@@ -146,7 +147,7 @@ const Payments = () => {
     setLoading(true);
     try {
       const [payRes, memRes, planRes, settingsRes] = await Promise.all([
-        api.get(`/payments?page=${page}&limit=${limit}`),
+        api.get(`/payments?page=${page}&limit=${limit}&search=${encodeURIComponent(debouncedSearch)}`),
         api.get('/members?limit=200'),
         api.get('/plans'),
         api.get('/settings').catch(() => ({ data: {} })),
@@ -162,12 +163,23 @@ const Payments = () => {
     } finally {
       setLoading(false);
     }
-  }, [page, limit]);
+  }, [page, limit, debouncedSearch]);
+
+  useEffect(() => {
+    const timer = setTimeout(() => setDebouncedSearch(search), 500);
+    return () => clearTimeout(timer);
+  }, [search]);
+
+  useEffect(() => {
+    // Reset to page 1 when search changes
+    setPage(1);
+  }, [debouncedSearch]);
 
   useEffect(() => {
     const q = new URLSearchParams(location.search).get('search');
     if (q !== null) {
       setSearch(q);
+      setDebouncedSearch(q);
     }
   }, [location.search]);
 
@@ -310,9 +322,7 @@ const Payments = () => {
     }
   };
 
-  const filteredPayments = (payments || []).filter((p) =>
-    searchMatch(search, p?.member_name, p?.amount, p?.payment_method)
-  );
+  const filteredPayments = payments || [];
 
   // Stats — only count PAID payments in revenue
   const totalRevenue = payments
@@ -412,7 +422,7 @@ const Payments = () => {
                 <div>
                   <h3 className="text-sm font-black text-ivory tracking-tight">Payment History</h3>
                   <p className="text-[9px] text-slate-500 font-bold uppercase tracking-widest mt-0.5">
-                    {filteredPayments.length} Transactions
+                    {totalRecords} Transactions
                   </p>
                 </div>
               </div>

@@ -161,17 +161,15 @@ const apiLimiter = rateLimit({
 
 const authLimiter = rateLimit({
   windowMs: 15 * 60 * 1000,
-  max: 100, // Auth: 100 attempts per 15m (Brute-force protection)
+  max: 30, // Auth: 30 attempts per 15m per account/IP (NAT-friendly Brute-force protection)
   standardHeaders: true,
   legacyHeaders: false,
   passOnStoreError: true,
   store: getLimiterStore('auth'),
   validate: false,
   keyGenerator: (req) => {
-    if (req.body && req.body.email) {
-      return `${(req.body.email || '').trim().toLowerCase()}`;
-    }
-    return req.ip;
+    const identifier = req.body?.phone || req.body?.email || req.body?.identifier || 'anon';
+    return `${req.ip}:${identifier}`;
   },
   message: { error: 'Too many login attempts. Please try again after 15 minutes.' }
 });

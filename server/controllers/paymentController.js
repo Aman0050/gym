@@ -116,12 +116,23 @@ const getPaymentHistory = async (req, res) => {
   
   const page = Math.max(1, parseInt(req.query.page) || 1);
   const limit = Math.min(100, Math.max(1, parseInt(req.query.limit) || 20)); // Default to 20, max 100
+  const search = req.query.search || '';
   const offset = (page - 1) * limit;
 
   try {
+    let whereClause = `WHERE p.gym_id = $1`;
+    let queryParams = [gymId, limit, offset];
+    let countParams = [gymId];
+
+    if (search) {
+      whereClause += ` AND (m.name ILIKE $2 OR m.phone ILIKE $2 OR p.payment_method ILIKE $2)`;
+      countParams.push(`%${search}%`);
+      queryParams = [gymId, `%${search}%`, limit, offset];
+    }
+
     const countResult = await db.query(
-      `SELECT COUNT(*) as total FROM payments WHERE gym_id = $1`,
-      [gymId]
+      `SELECT COUNT(*) as total FROM payments p JOIN members m ON p.member_id = m.id ${whereClause}`,
+      countParams
     );
     const totalRecords = parseInt(countResult.rows[0].total || 0);
     const totalPages = Math.ceil(totalRecords / limit);
@@ -131,10 +142,10 @@ const getPaymentHistory = async (req, res) => {
        FROM payments p
        JOIN members m ON p.member_id = m.id
        LEFT JOIN plans pl ON p.plan_id = pl.id
-       WHERE p.gym_id = $1
+       ${whereClause}
        ORDER BY p.payment_date DESC
-       LIMIT $2 OFFSET $3`,
-      [gymId, limit, offset]
+       LIMIT $${search ? 3 : 2} OFFSET $${search ? 4 : 3}`,
+      queryParams
     );
 
     res.json({

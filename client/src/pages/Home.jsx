@@ -52,10 +52,10 @@ const Home = () => {
               className="w-full h-full object-cover"
               alt=""
             />
-            <div className="absolute inset-0 bg-gradient-to-b from-obsidian via-obsidian/40 to-obsidian" />
+            <div className="absolute inset-0 bg-gradient-to-b from-obsidian via-obsidian/80 to-obsidian" />
           </div>
 
-          <main className="relative z-10 px-4 sm:px-6 lg:px-8 flex-1 flex items-center py-20 sm:py-32">
+          <main className="relative z-10 px-4 sm:px-6 lg:px-8 flex-1 flex items-center py-24 sm:py-32 lg:py-40">
             <div className="max-w-7xl mx-auto w-full grid lg:grid-cols-2 gap-12 sm:gap-20 items-center">
               <motion.div
                 initial={{ opacity: 0, y: 20 }}
@@ -125,7 +125,7 @@ const Home = () => {
         </section>
 
         {/* ── Intelligence Section ── */}
-        <section id="performance" className="py-24 sm:py-32 lg:py-48 relative overflow-hidden border-t border-white/5">
+        <section id="performance" className="py-24 sm:py-32 lg:py-40 relative overflow-hidden bg-gradient-to-b from-obsidian to-obsidian/95">
            <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10">
               <div className="text-center mb-16 sm:mb-24">
                 <div className="flex items-center justify-center space-x-3 mb-6">
@@ -204,7 +204,7 @@ const Home = () => {
         </section>
 
         {/* ── Membership Section ── */}
-        <section id="membership" className="py-24 sm:py-32 lg:py-48 relative overflow-hidden">
+        <section id="membership" className="py-24 sm:py-32 lg:py-40 relative overflow-hidden">
           <div className="absolute inset-0 z-0">
             <img src={membershipBg} className="w-full h-full object-cover scale-[1.3] origin-right opacity-20 grayscale" alt="" />
             <div className="absolute inset-0 bg-gradient-to-b from-obsidian via-transparent to-obsidian" />

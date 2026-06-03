@@ -4,6 +4,7 @@ import Layout from './components/Layout';
 import { useAuthStore } from './store/useAuthStore';
 import { PageLoader } from './components/Skeleton';
 import SuspensionScreen from './pages/SuspensionScreen';
+import ScrollToTop from './components/ScrollToTop';
 
 // ── Lazy Load Pages ──
 const Home       = lazy(() => import('./pages/Home'));
@@ -36,6 +37,7 @@ function App() {
 
   return (
     <BrowserRouter future={{ v7_startTransition: true, v7_relativeSplatPath: true }}>
+      <ScrollToTop />
       {isAuthenticated && <CommandPalette />}
       {isAuthenticated && <GlobalSocketListener />}
       <Suspense fallback={<PageLoader />}>

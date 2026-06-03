@@ -85,7 +85,7 @@ const WhyFitXenoSection = () => {
   ];
 
   return (
-    <section className="py-20 lg:py-32 relative z-10 bg-gradient-to-b from-transparent via-black/20 to-transparent">
+    <section className="py-24 sm:py-32 lg:py-40 relative z-10 bg-gradient-to-b from-transparent via-black/20 to-transparent">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
          <div className="text-center max-w-3xl mx-auto mb-16 lg:mb-24">
             <h2 className="text-3xl sm:text-5xl font-black text-white font-serif tracking-tight mb-6">Why Industry Leaders Choose <span className="text-earth-clay">FitXeno</span></h2>
@@ -109,7 +109,7 @@ const WhyFitXenoSection = () => {
 };
 
 const FinalCTA = () => (
-  <section className="py-20 lg:py-32 relative z-10 bg-gradient-to-b from-transparent via-obsidian to-obsidian overflow-hidden">
+  <section className="py-24 sm:py-32 lg:py-40 relative z-10 bg-gradient-to-b from-transparent via-obsidian to-obsidian overflow-hidden">
      <div className="absolute inset-0 z-0">
        <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_center,rgba(160,82,45,0.15)_0%,transparent_60%)]" />
        <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-full max-w-[1000px] h-[400px] bg-earth-clay/20 blur-[150px] mix-blend-screen" />
@@ -294,7 +294,7 @@ const Contact = () => {
         <TrustSection />
         <WhyFitXenoSection />
 
-        <section className="py-20 lg:py-32 relative z-10">
+        <section className="py-24 sm:py-32 lg:py-40 relative z-10">
           <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
             
             <div className="grid lg:grid-cols-12 gap-12 lg:gap-16 items-start relative z-20">
