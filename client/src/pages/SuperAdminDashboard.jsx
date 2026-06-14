@@ -5,7 +5,7 @@ import {
   Building2, Globe, IndianRupee, Users,
   BarChart3, ShieldAlert, CheckCircle, Search,
   Activity, TrendingUp, Zap, ShieldCheck,
-  AlertCircle, UserPlus,
+  AlertCircle, UserPlus, Trash2
 } from 'lucide-react';
 import toast from 'react-hot-toast';
 import { Card, Button, StatusBadge, Table, TableRow, Modal, Input } from '../components/ui';
@@ -54,6 +54,23 @@ const SuperAdminDashboard = () => {
       fetchData();
     } catch (err) {
       toast.error('Failed to update branch status');
+    } finally {
+      setUpdatingId(null);
+    }
+  };
+
+  const handleDeleteGym = async (id, name) => {
+    if (!window.confirm(`Are you absolutely sure you want to permanently delete the branch "${name}" and ALL its data? This action cannot be undone.`)) {
+      return;
+    }
+    
+    setUpdatingId(id);
+    try {
+      await api.delete(`/gyms/${id}`);
+      toast.success('Branch deleted successfully');
+      fetchData();
+    } catch (err) {
+      toast.error('Failed to delete branch');
     } finally {
       setUpdatingId(null);
     }
@@ -229,16 +246,16 @@ const SuperAdminDashboard = () => {
               </div>
               
               <div className="grid grid-cols-2 gap-4">
-                <Button variant="secondary" onClick={() => downloadExport('/members/export/csv?format=csv', 'Global_Members.csv')} className="w-full flex items-center justify-center gap-2 !py-4 border-dashed border-white/20">
+                <Button variant="secondary" onClick={() => downloadExport('/members/export?format=xlsx', 'Global_Members.xlsx')} className="w-full flex items-center justify-center gap-2 !py-4 border-dashed border-white/20">
                   Export Members
                 </Button>
-                <Button variant="secondary" onClick={() => downloadExport('/admin/exports/payments?format=csv', 'Global_Payments.csv')} className="w-full flex items-center justify-center gap-2 !py-4 border-dashed border-white/20">
+                <Button variant="secondary" onClick={() => downloadExport('/admin/exports/payments?format=xlsx', 'Global_Payments.xlsx')} className="w-full flex items-center justify-center gap-2 !py-4 border-dashed border-white/20">
                   Export Payments
                 </Button>
-                <Button variant="secondary" onClick={() => downloadExport('/admin/exports/attendance?format=csv', 'Global_Attendance.csv')} className="w-full flex items-center justify-center gap-2 !py-4 border-dashed border-white/20">
+                <Button variant="secondary" onClick={() => downloadExport('/admin/exports/attendance?format=xlsx', 'Global_Attendance.xlsx')} className="w-full flex items-center justify-center gap-2 !py-4 border-dashed border-white/20">
                   Export Attendance
                 </Button>
-                <Button variant="secondary" onClick={() => downloadExport('/admin/exports/subscriptions?format=csv', 'Global_Subscriptions.csv')} className="w-full flex items-center justify-center gap-2 !py-4 border-dashed border-white/20">
+                <Button variant="secondary" onClick={() => downloadExport('/admin/exports/subscriptions?format=xlsx', 'Global_Subscriptions.xlsx')} className="w-full flex items-center justify-center gap-2 !py-4 border-dashed border-white/20">
                   Export Subscriptions
                 </Button>
               </div>
@@ -273,7 +290,7 @@ const SuperAdminDashboard = () => {
                 { label: 'Manager',     className: 'flex-1 hidden md:table-cell' },
                 { label: 'Performance', className: 'flex-1 hidden md:table-cell' },
                 { label: 'Status',      className: 'w-36' },
-                { label: 'Actions',     className: 'w-20 text-right' },
+                { label: 'Actions',     className: 'w-32 text-right' },
               ]}
               emptyMessage="No branches found."
               emptyIcon={Building2}
@@ -323,7 +340,7 @@ const SuperAdminDashboard = () => {
                   </div>
 
                   {/* ── Actions ── */}
-                  <div className="w-20 flex items-center justify-end gap-2">
+                  <div className="w-32 flex items-center justify-end gap-2">
                     <button
                       onClick={(e) => {
                         e.stopPropagation();
@@ -345,7 +362,7 @@ const SuperAdminDashboard = () => {
                         updatingId === g.id
                           ? 'opacity-50 cursor-not-allowed border-white/[0.07] text-slate-600'
                           : g.saas_subscription_status === 'ACTIVE'
-                          ? 'text-slate-500 hover:text-red-400 hover:bg-red-500/[0.08] border-white/[0.05] hover:border-red-500/20'
+                          ? 'text-slate-500 hover:text-orange-400 hover:bg-orange-500/[0.08] border-white/[0.05] hover:border-orange-500/20'
                           : 'text-earth-clay hover:text-emerald-400 hover:bg-emerald-500/[0.08] border-white/[0.05] hover:border-emerald-500/20'
                       }`}
                       title={g.saas_subscription_status === 'ACTIVE' ? 'Suspend branch' : 'Reactivate branch'}
@@ -357,6 +374,17 @@ const SuperAdminDashboard = () => {
                       ) : (
                         <CheckCircle size={18} />
                       )}
+                    </button>
+                    <button
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        handleDeleteGym(g.id, g.name);
+                      }}
+                      disabled={updatingId === g.id}
+                      className="w-9 h-9 rounded-xl transition-all border flex items-center justify-center text-slate-500 hover:text-red-500 hover:bg-red-500/[0.08] border-white/[0.05] hover:border-red-500/30"
+                      title="Delete branch permanently"
+                    >
+                      <Trash2 size={16} />
                     </button>
                   </div>
                 </TableRow>

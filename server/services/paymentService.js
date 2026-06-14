@@ -121,6 +121,7 @@ const confirmPayment = async (paymentId, gymId, transactionReference = null) => 
   const now = new Date().toISOString();
 
   let confirmedPayment;
+  let payment;
   try {
     await db.query('BEGIN');
 
@@ -138,7 +139,7 @@ const confirmPayment = async (paymentId, gymId, transactionReference = null) => 
       throw new Error('Payment not found');
     }
 
-    const payment = fetchResult.rows[0];
+    payment = fetchResult.rows[0];
 
     if (payment.payment_status === 'PAID') {
       throw new Error('Payment already confirmed');

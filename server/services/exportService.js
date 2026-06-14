@@ -112,7 +112,7 @@ const buildPaymentReportData = (rawPayments) => {
     'Plan Name':            sanitize(p.plan_name),
     'Amount':               formatCurrency(p.amount),
     'Status':               sanitize(p.payment_status, 'PAID'),
-    'Method':               sanitize(p.payment_method, 'CASH'),
+    'Method':               sanitize(p.payment_mode, 'CASH'),
     'Date':                 formatDate(p.payment_date),
   }));
 };
@@ -129,7 +129,7 @@ const buildAttendanceReportData = (rawAttendance) => {
 const buildSubscriptionReportData = (rawPlans) => {
   return rawPlans.map((p) => ({
     'Plan Name':            sanitize(p.name),
-    'Duration (Months)':    p.duration_months || 1,
+    'Duration (Days)':      p.duration_days || 30,
     'Price':                formatCurrency(p.price),
   }));
 };

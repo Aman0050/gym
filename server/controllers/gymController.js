@@ -3,6 +3,23 @@ const bcrypt = require('bcrypt');
 const logger = require('../utils/logger');
 const { eventBus, EVENTS } = require('../events/eventBus');
 
+const deleteGym = async (req, res) => {
+  const { id } = req.params;
+  try {
+    const result = await db.query('DELETE FROM gyms WHERE id = $1 RETURNING *', [id]);
+    if (result.rows.length === 0) return res.status(404).json({ error: 'Gym not found' });
+    
+    // Note: Due to ON DELETE CASCADE on our DB schema, 
+    // all related users, plans, members, payments, and attendance will also be deleted.
+    
+    logger.info(`Gym ${id} and all associated data deleted by Super Admin`);
+    res.json({ success: true, message: 'Gym and all associated data deleted successfully' });
+  } catch (err) {
+    logger.error('Delete gym error:', err);
+    res.status(500).json({ error: 'Failed to delete gym' });
+  }
+};
+
 const getGyms = async (req, res) => {
   try {
     const result = await db.query(`
@@ -304,4 +321,4 @@ const getGymDetails = async (req, res) => {
   }
 };
 
-module.exports = { getGyms, createGym, updateGymStatus, getGlobalAnalytics, createGymAccount, checkGymIdAvailability, assignManager, getGymDetails, updateGym, notifyGym };
+module.exports = { getGyms, createGym, updateGymStatus, getGlobalAnalytics, createGymAccount, checkGymIdAvailability, assignManager, getGymDetails, updateGym, notifyGym, deleteGym };

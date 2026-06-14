@@ -1,6 +1,6 @@
 const express = require('express');
 const router = express.Router();
-const { getGyms, createGym, updateGymStatus, getGlobalAnalytics, createGymAccount, checkGymIdAvailability, assignManager, getGymDetails, updateGym, notifyGym } = require('../controllers/gymController');
+const { getGyms, createGym, updateGymStatus, getGlobalAnalytics, createGymAccount, checkGymIdAvailability, assignManager, getGymDetails, updateGym, notifyGym, deleteGym } = require('../controllers/gymController');
 const { protect, superAdminOnly } = require('../middlewares/authMiddleware');
 const { validateUuidParamMiddleware } = require('../middlewares/validateMiddleware');
 
@@ -43,5 +43,8 @@ router.put('/:id/status', updateGymStatus);
 
 // GET /api/gyms/analytics/global
 router.get('/analytics/global', getGlobalAnalytics);
+
+// DELETE /api/gyms/:id
+router.delete('/:id', deleteGym);
 
 module.exports = router;

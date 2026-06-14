@@ -49,7 +49,7 @@ const StepIndicator = ({ currentStep }) => {
     { n: 3, label: 'Activated' },
   ];
   return (
-    <div className="flex items-center justify-center gap-0 mb-8">
+    <div className="flex items-center justify-center gap-0 mb-4">
       {steps.map((s, i) => {
         const isCompleted = currentStep > s.n || (currentStep === 3 && s.n === 3);
         const isActive = currentStep === s.n && currentStep !== 3;
@@ -594,9 +594,9 @@ const Payments = () => {
                 className="grid grid-cols-1 lg:grid-cols-5 gap-8"
               >
                 {/* Left: Input Selection (3/5) */}
-                <form onSubmit={handleProceedToCheckout} className="lg:col-span-3 space-y-8">
+                <form onSubmit={handleProceedToCheckout} className="lg:col-span-3 space-y-3">
                   {/* Member Selection */}
-                  <div className="space-y-4 relative z-50">
+                  <div className="space-y-1 relative z-50">
                     <label className="label-text ml-1 flex items-center gap-2">
                       <User size={14} className="text-earth-clay" />
                       Select Member
@@ -614,7 +614,7 @@ const Payments = () => {
                           if (newPayment.memberId) setNewPayment({ ...newPayment, memberId: '' });
                         }}
                         onFocus={() => setIsMemberDropdownOpen(true)}
-                        className="w-full bg-white/[0.03] border border-white/[0.07] focus:border-earth-clay/40 rounded-2xl py-3.5 pl-12 pr-4 text-sm text-[#ffffff] outline-none transition-all placeholder:text-white/[0.35]"
+                        className="w-full bg-white/[0.03] border border-white/[0.07] focus:border-earth-clay/40 rounded-2xl py-2 pl-12 pr-4 text-sm text-[#ffffff] outline-none transition-all placeholder:text-white/[0.35]"
                       />
                       <AnimatePresence>
                         {isMemberDropdownOpen && (
@@ -672,18 +672,18 @@ const Payments = () => {
                   </div>
 
                   {/* Quick Plan Grid */}
-                  <div className="space-y-4">
+                  <div className="space-y-1">
                     <label className="label-text ml-1 flex items-center gap-2">
                       <Activity size={14} className="text-earth-clay" />
                       Quick Plan Selection
                     </label>
-                    <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
+                    <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
                       {plans.map((p) => (
                         <button
                           key={p.id}
                           type="button"
                           onClick={() => handlePlanChange(p.id)}
-                          className={`p-4 rounded-2xl border text-left transition-all duration-200 group ${
+                          className={`p-3 rounded-2xl border text-left transition-all duration-200 group ${
                             newPayment.planId === p.id
                               ? 'bg-earth-clay border-earth-clay shadow-lg shadow-earth-clay/20'
                               : 'bg-white/[0.03] border-white/[0.06] hover:border-white/20'
@@ -692,7 +692,7 @@ const Payments = () => {
                           <p className={`text-[11px] font-black uppercase tracking-widest ${newPayment.planId === p.id ? 'text-white' : 'text-slate-400'}`}>
                             {p.name}
                           </p>
-                          <p className={`text-lg font-black mt-1 ${newPayment.planId === p.id ? 'text-white' : 'text-ivory'}`}>
+                          <p className={`text-base font-black mt-1 ${newPayment.planId === p.id ? 'text-white' : 'text-ivory'}`}>
                             ₹{p.price}
                           </p>
                         </button>
@@ -701,18 +701,18 @@ const Payments = () => {
                   </div>
 
                   {/* Payment Settings */}
-                  <div className="grid grid-cols-2 gap-5">
-                    <div className="space-y-4">
+                  <div className="grid grid-cols-2 gap-3">
+                    <div className="space-y-1">
                       <label className="label-text ml-1">Start Date</label>
                       <input
                         type="date"
                         required
                         value={newPayment.validFrom}
                         onChange={(e) => setNewPayment({ ...newPayment, validFrom: e.target.value })}
-                        className="w-full bg-white/[0.03] border border-white/[0.07] rounded-2xl py-3.5 px-4 text-sm text-white outline-none"
+                        className="w-full bg-white/[0.03] border border-white/[0.07] rounded-2xl py-2 px-3 text-sm text-white outline-none"
                       />
                     </div>
-                    <div className="space-y-4">
+                    <div className="space-y-1">
                       <label className="label-text ml-1">Custom Amount</label>
                       <div className="relative">
                         <span className="absolute left-4 top-1/2 -translate-y-1/2 text-earth-clay font-black text-sm">₹</span>
@@ -723,25 +723,25 @@ const Payments = () => {
                             setNewPayment({ ...newPayment, amount: e.target.value });
                             if (isAdmin && e.target.value !== newPayment.originalPrice) setUseCustomPricing(true);
                           }}
-                          className="w-full bg-white/[0.03] border border-white/[0.07] focus:border-earth-clay/40 rounded-2xl py-3.5 pl-8 pr-4 text-sm text-white outline-none"
+                          className="w-full bg-white/[0.03] border border-white/[0.07] focus:border-earth-clay/40 rounded-2xl py-2 pl-8 pr-3 text-sm text-white outline-none"
                         />
                       </div>
                     </div>
                   </div>
 
                   {/* Payment Method */}
-                  <div className="space-y-4 pt-2">
+                  <div className="space-y-1 pt-1">
                     <label className="label-text ml-1 flex items-center gap-2">
                       <CreditCard size={14} className="text-earth-clay" />
                       Payment Method
                     </label>
-                    <div className="grid grid-cols-2 gap-3">
+                    <div className="grid grid-cols-2 gap-2">
                       {['Cash', 'UPI'].map((method) => (
                         <button
                           key={method}
                           type="button"
                           onClick={() => setNewPayment({ ...newPayment, paymentMethod: method })}
-                          className={`p-4 rounded-2xl border transition-all duration-300 flex items-center justify-center gap-2 hover:-translate-y-0.5 ${
+                          className={`p-3 rounded-2xl border transition-all duration-300 flex items-center justify-center gap-2 hover:-translate-y-0.5 ${
                             newPayment.paymentMethod === method
                               ? 'bg-earth-clay/10 border-earth-clay shadow-[0_0_15px_rgba(160,82,45,0.2)]'
                               : 'bg-white/[0.03] border-white/[0.06] hover:border-white/20'
@@ -760,33 +760,33 @@ const Payments = () => {
                 </form>
 
                 {/* Right: Order Summary (2/5) */}
-                <div className="lg:col-span-2 space-y-6">
-                  <div className="aura-glass-heavy p-8 rounded-[2.5rem] border-earth-clay/10 bg-gradient-to-br from-earth-clay/10 to-transparent flex flex-col">
-                    <h4 className="text-xs font-black text-earth-clay uppercase tracking-[0.2em] mb-8">Order Summary</h4>
+                <div className="lg:col-span-2 space-y-4">
+                  <div className="aura-glass-heavy p-4 rounded-3xl border-earth-clay/10 bg-gradient-to-br from-earth-clay/10 to-transparent flex flex-col h-full">
+                    <h4 className="text-xs font-black text-earth-clay uppercase tracking-[0.2em] mb-2">Order Summary</h4>
 
-                    <div className="space-y-5 flex-1">
-                      <div className="flex justify-between items-center pb-4 border-b border-white/[0.05]">
+                    <div className="space-y-1 flex-1">
+                      <div className="flex justify-between items-center pb-1 border-b border-white/[0.05]">
                         <span className="text-[10px] font-black text-slate-500 uppercase tracking-widest">Member</span>
                         <span className="text-xs font-black text-ivory text-right max-w-[120px] truncate">
                           {selectedMember?.name || '—'}
                         </span>
                       </div>
-                      <div className="flex justify-between items-center pb-4 border-b border-white/[0.05]">
+                      <div className="flex justify-between items-center pb-1 border-b border-white/[0.05]">
                         <span className="text-[10px] font-black text-slate-500 uppercase tracking-widest">Base Plan</span>
                         <span className="text-xs font-black text-ivory">{selectedPlan?.name || 'None'}</span>
                       </div>
-                      <div className="flex justify-between items-center pb-4 border-b border-white/[0.05]">
+                      <div className="flex justify-between items-center pb-1 border-b border-white/[0.05]">
                         <span className="text-[10px] font-black text-slate-500 uppercase tracking-widest">Duration</span>
                         <span className="text-xs font-black text-ivory">{newPayment.customDurationDays || selectedPlan?.duration_days || 0} Days</span>
                       </div>
-                      <div className="flex justify-between items-center pb-4 border-b border-white/[0.05]">
+                      <div className="flex justify-between items-center pb-1 border-b border-white/[0.05]">
                         <span className="text-[10px] font-black text-slate-500 uppercase tracking-widest">Method</span>
                         <span className="text-xs font-black text-ivory uppercase flex items-center gap-1.5">
                           {methodIcon(newPayment.paymentMethod)}
                           {newPayment.paymentMethod}
                         </span>
                       </div>
-                      <div className="flex justify-between items-center pb-4 border-b border-white/[0.05]">
+                      <div className="flex justify-between items-center pb-1 border-b border-white/[0.05]">
                         <span className="text-[10px] font-black text-slate-500 uppercase tracking-widest">Status</span>
                         <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded bg-amber-500/10 border border-amber-500/20 text-amber-400 text-[9px] font-black uppercase tracking-widest">
                           <Clock size={9} />
@@ -794,19 +794,19 @@ const Payments = () => {
                         </span>
                       </div>
 
-                      <div className="pt-6">
-                        <p className="text-[9px] font-black text-slate-600 uppercase tracking-widest mb-2 text-center">Amount Due</p>
-                        <p className="text-5xl font-black text-ivory text-center tracking-tighter">
+                      <div className="pt-2">
+                        <p className="text-[9px] font-black text-slate-600 uppercase tracking-widest mb-1 text-center">Amount Due</p>
+                        <p className="text-3xl font-black text-ivory text-center tracking-tighter">
                           <span className="text-emerald-400 text-2xl mr-1">₹</span>
                           {newPayment.amount || 0}
                         </p>
                       </div>
                     </div>
 
-                    <div className="space-y-3 pt-8">
+                    <div className="space-y-2 pt-2 mt-auto">
                       <Button
                         variant="primary"
-                        className="w-full h-16 !text-base !font-black !rounded-3xl shadow-2xl shadow-earth-clay/20 group"
+                        className="w-full h-12 !text-base !font-black !rounded-2xl shadow-2xl shadow-earth-clay/20 group"
                         onClick={handleProceedToCheckout}
                         disabled={!newPayment.memberId || !newPayment.planId || !newPayment.amount || isGeneratingQR}
                         loading={isGeneratingQR}
@@ -834,12 +834,12 @@ const Payments = () => {
                 animate={{ opacity: 1, x: 0 }}
                 exit={{ opacity: 0, x: 24 }}
                 transition={{ duration: 0.3 }}
-                className="grid grid-cols-1 lg:grid-cols-5 gap-8"
+                className="grid grid-cols-1 lg:grid-cols-5 gap-6"
               >
                 {/* Left: QR or Payment Info (3/5) */}
-                <div className="lg:col-span-3 space-y-6">
+                <div className="lg:col-span-3 space-y-3">
                   {/* Payment Pending Banner */}
-                  <div className="flex items-center gap-3 p-4 rounded-2xl border border-amber-500/25 bg-amber-500/[0.06]">
+                  <div className="flex items-center gap-3 p-3 rounded-2xl border border-amber-500/25 bg-amber-500/[0.06]">
                     <div className="w-9 h-9 rounded-xl bg-amber-500/20 flex items-center justify-center flex-shrink-0">
                       <Clock size={18} className="text-amber-400" />
                     </div>
@@ -857,22 +857,22 @@ const Payments = () => {
                       initial={{ scale: 0.9, opacity: 0 }}
                       animate={{ scale: 1, opacity: 1 }}
                       transition={{ duration: 0.4, type: 'spring' }}
-                      className="flex flex-col items-center bg-white/[0.02] border border-earth-clay/20 rounded-3xl p-8 shadow-[0_0_50px_rgba(160,82,45,0.12)]"
+                      className="flex flex-col items-center bg-white/[0.02] border border-earth-clay/20 rounded-3xl p-6 shadow-[0_0_50px_rgba(160,82,45,0.12)]"
                     >
                       {/* QR wrapper */}
-                      <div className="relative mb-6">
+                      <div className="relative mb-4">
                         <div className="absolute -inset-3 rounded-2xl bg-earth-clay/10 blur-md" />
-                        <div className="relative bg-white p-4 rounded-2xl shadow-xl">
+                        <div className="relative bg-white p-3 rounded-2xl shadow-xl">
                           <QRCodeSVG
                             value={upiPayload}
-                            size={180}
+                            size={160}
                             level="Q"
                             includeMargin={false}
                           />
                         </div>
                       </div>
 
-                      <div className="text-center space-y-1 mb-5">
+                      <div className="text-center space-y-1 mb-3">
                         <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Scan to Pay via UPI</p>
                         <p className="text-xl font-black text-ivory">
                           <span className="text-emerald-400">₹</span>{Number(newPayment.amount).toLocaleString('en-IN')}
@@ -892,19 +892,19 @@ const Payments = () => {
                       initial={{ scale: 0.9, opacity: 0 }}
                       animate={{ scale: 1, opacity: 1 }}
                       transition={{ duration: 0.4 }}
-                      className="flex flex-col items-center bg-white/[0.02] border border-earth-clay/20 rounded-3xl p-10 text-center shadow-[0_0_50px_rgba(160,82,45,0.08)]"
+                      className="flex flex-col items-center bg-white/[0.02] border border-earth-clay/20 rounded-3xl p-6 text-center shadow-[0_0_50px_rgba(160,82,45,0.08)]"
                     >
-                      <div className="w-20 h-20 rounded-3xl bg-earth-clay/15 border border-earth-clay/25 flex items-center justify-center mb-6 shadow-[0_0_30px_rgba(194,107,54,0.2)]">
-                        <span className="text-earth-clay scale-125">{methodIcon(newPayment.paymentMethod)}</span>
+                      <div className="w-16 h-16 rounded-3xl bg-earth-clay/15 border border-earth-clay/25 flex items-center justify-center mb-4 shadow-[0_0_30px_rgba(194,107,54,0.2)]">
+                        <span className="text-earth-clay scale-110">{methodIcon(newPayment.paymentMethod)}</span>
                       </div>
                       <p className="text-[10px] font-black text-slate-500 uppercase tracking-widest mb-2">Collect Payment Via</p>
                       <p className="text-2xl font-black text-ivory mb-1">{newPayment.paymentMethod}</p>
-                      <p className="text-3xl font-black text-ivory mt-4">
+                      <p className="text-3xl font-black text-ivory mt-2">
                         <span className="text-emerald-400 mr-1">₹</span>
                         {Number(newPayment.amount).toLocaleString('en-IN')}
                       </p>
-                      <p className="text-xs text-slate-400 mt-3">from <span className="text-ivory font-bold">{selectedMember?.name}</span></p>
-                      <div className="flex items-center gap-2 px-4 py-2 rounded-xl border border-amber-500/30 bg-amber-500/10 mt-6">
+                      <p className="text-xs text-slate-400 mt-2">from <span className="text-ivory font-bold">{selectedMember?.name}</span></p>
+                      <div className="flex items-center gap-2 px-4 py-2 rounded-xl border border-amber-500/30 bg-amber-500/10 mt-4">
                         <Clock size={12} className="text-amber-400 animate-pulse" />
                         <span className="text-[10px] font-black text-amber-400 uppercase tracking-widest">Awaiting Collection</span>
                       </div>
@@ -922,31 +922,31 @@ const Payments = () => {
 
                 {/* Right: Confirm Panel (2/5) */}
                 <div className="lg:col-span-2">
-                  <div className="aura-glass-heavy p-8 rounded-[2.5rem] border-earth-clay/10 bg-gradient-to-br from-earth-clay/10 to-transparent flex flex-col">
-                    <h4 className="text-xs font-black text-earth-clay uppercase tracking-[0.2em] mb-6">Order Summary</h4>
+                  <div className="aura-glass-heavy p-5 rounded-3xl border-earth-clay/10 bg-gradient-to-br from-earth-clay/10 to-transparent flex flex-col">
+                    <h4 className="text-xs font-black text-earth-clay uppercase tracking-[0.2em] mb-2">Order Summary</h4>
 
-                    <div className="space-y-4 flex-1">
-                      <div className="flex justify-between items-center py-3 border-b border-white/[0.05]">
+                    <div className="space-y-1 flex-1">
+                      <div className="flex justify-between items-center py-1 border-b border-white/[0.05]">
                         <span className="text-[10px] font-black text-slate-500 uppercase tracking-widest">Member</span>
                         <span className="text-xs font-black text-ivory truncate max-w-[120px]">{selectedMember?.name}</span>
                       </div>
-                      <div className="flex justify-between items-center py-3 border-b border-white/[0.05]">
+                      <div className="flex justify-between items-center py-1 border-b border-white/[0.05]">
                         <span className="text-[10px] font-black text-slate-500 uppercase tracking-widest">Plan</span>
                         <span className="text-xs font-black text-earth-clay">{selectedPlan?.name}</span>
                       </div>
-                      <div className="flex justify-between items-center py-3 border-b border-white/[0.05]">
+                      <div className="flex justify-between items-center py-1 border-b border-white/[0.05]">
                         <span className="text-[10px] font-black text-slate-500 uppercase tracking-widest">Duration</span>
                         <span className="text-xs font-black text-ivory">{newPayment.customDurationDays || selectedPlan?.duration_days || 0}d</span>
                       </div>
-                      <div className="flex justify-between items-center py-3 border-b border-white/[0.05]">
+                      <div className="flex justify-between items-center py-1 border-b border-white/[0.05]">
                         <span className="text-[10px] font-black text-slate-500 uppercase tracking-widest">Method</span>
                         <span className="text-xs font-black text-ivory uppercase">{newPayment.paymentMethod}</span>
                       </div>
-                      <div className="flex justify-between items-center py-3 border-b border-white/[0.05]">
+                      <div className="flex justify-between items-center py-1 border-b border-white/[0.05]">
                         <span className="text-[10px] font-black text-slate-500 uppercase tracking-widest">Pay Status</span>
                         <PaymentStatusBadge status="PENDING" />
                       </div>
-                      <div className="flex justify-between items-center py-3 border-b border-white/[0.05]">
+                      <div className="flex justify-between items-center py-1 border-b border-white/[0.05]">
                         <span className="text-[10px] font-black text-slate-500 uppercase tracking-widest">Membership</span>
                         <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded bg-amber-500/10 border border-amber-500/20 text-amber-400 text-[9px] font-black uppercase tracking-widest">
                           <Clock size={9} className="animate-pulse" />
@@ -954,9 +954,9 @@ const Payments = () => {
                         </span>
                       </div>
 
-                      <div className="pt-4">
-                        <p className="text-[9px] font-black text-slate-600 uppercase tracking-widest mb-2 text-center">Amount Due</p>
-                        <p className="text-4xl font-black text-ivory text-center tracking-tighter">
+                      <div className="pt-2">
+                        <p className="text-[9px] font-black text-slate-600 uppercase tracking-widest mb-1 text-center">Amount Due</p>
+                        <p className="text-3xl font-black text-ivory text-center tracking-tighter">
                           <span className="text-emerald-400 mr-1">₹</span>
                           {Number(newPayment.amount).toLocaleString('en-IN')}
                         </p>
@@ -964,13 +964,13 @@ const Payments = () => {
                     </div>
 
                     {/* Confirm Button — Primary Admin Action */}
-                    <div className="space-y-3 pt-8">
+                    <div className="space-y-2 pt-2">
                       <motion.button
                         whileHover={{ scale: 1.02 }}
                         whileTap={{ scale: 0.98 }}
                         onClick={handleConfirmPayment}
                         disabled={isConfirming}
-                        className="w-full h-16 px-4 rounded-3xl font-black text-sm sm:text-base flex items-center justify-center gap-2 sm:gap-3 transition-all duration-300 disabled:opacity-60 disabled:cursor-not-allowed"
+                        className="w-full h-12 px-4 rounded-2xl font-black text-sm sm:text-base flex items-center justify-center gap-2 sm:gap-3 transition-all duration-300 disabled:opacity-60 disabled:cursor-not-allowed"
                         style={{
                           background: isConfirming
                             ? 'rgba(16,185,129,0.3)'

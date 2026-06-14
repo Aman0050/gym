@@ -23,7 +23,7 @@ const exportPayments = async (req, res) => {
   try {
     const format = req.query.format === 'xlsx' ? 'xlsx' : 'csv';
     const result = await db.query(`
-      SELECT p.id, p.amount, p.payment_status, p.payment_method, p.payment_date,
+      SELECT p.id, p.amount, p.payment_status, p.payment_mode, p.payment_date,
              m.name as member_name, pl.name as plan_name, g.name as gym_name
       FROM payments p
       JOIN members m ON p.member_id = m.id
@@ -69,7 +69,7 @@ const exportSubscriptions = async (req, res) => {
   try {
     const format = req.query.format === 'xlsx' ? 'xlsx' : 'csv';
     const result = await db.query(`
-      SELECT name, duration_months, price, gym_id
+      SELECT name, duration_days, price, gym_id
       FROM plans
       ORDER BY price DESC
     `);
