@@ -33,7 +33,7 @@ const BranchProfile = () => {
   
   const [showEditModal, setShowEditModal] = useState(false);
   const [showNotifyModal, setShowNotifyModal] = useState(false);
-  const [editForm, setEditForm] = useState({ name: '', phone: '', address: '', contact_person: '', login_id: '', password: '' });
+  const [editForm, setEditForm] = useState({ name: '', phone: '', address: '', contact_person: '', login_id: '', password: '', owner_qr: '' });
   const [notifyForm, setNotifyForm] = useState({ title: '', message: '', type: 'IN_APP' });
   const [isSubmitting, setIsSubmitting] = useState(false);
 
@@ -85,6 +85,21 @@ const BranchProfile = () => {
     }
   };
 
+  const handleFileChange = (e) => {
+    const file = e.target.files[0];
+    if (file) {
+      if (file.size > 2 * 1024 * 1024) {
+        toast.error('File size must be less than 2MB');
+        return;
+      }
+      const reader = new FileReader();
+      reader.onloadend = () => {
+        setEditForm(prev => ({ ...prev, owner_qr: reader.result }));
+      };
+      reader.readAsDataURL(file);
+    }
+  };
+
   const openEditModal = () => {
     if (data?.branch) {
       setEditForm({
@@ -93,7 +108,8 @@ const BranchProfile = () => {
         address: data.branch.address || '',
         contact_person: data.branch.contact_person || '',
         login_id: data.branch.login_id || '',
-        password: '' // empty so we don't send anything unless they type a new one
+        password: '', // empty so we don't send anything unless they type a new one
+        owner_qr: data.branch.owner_qr || ''
       });
       setShowEditModal(true);
     }
@@ -449,6 +465,36 @@ const BranchProfile = () => {
               onChange={e => setEditForm({ ...editForm, password: e.target.value })} 
               placeholder="••••••••"
             />
+          </div>
+          <div className="space-y-3">
+            <label className="label-text ml-2">Gym Owner QR Code (Optional)</label>
+            <div className="flex items-center gap-4">
+              <input
+                type="file"
+                accept="image/*"
+                onChange={handleFileChange}
+                className="hidden"
+                id="owner-qr-edit"
+              />
+              <label
+                htmlFor="owner-qr-edit"
+                className="cursor-pointer px-5 py-3 bg-white/5 border border-white/10 hover:border-white/20 rounded-2xl text-xs font-semibold text-ivory hover:text-earth-clay transition-all select-none"
+              >
+                Choose QR Image
+              </label>
+              {editForm.owner_qr && (
+                <div className="flex items-center gap-3 bg-white/[0.02] border border-white/5 p-2 rounded-2xl">
+                  <img src={editForm.owner_qr} alt="QR Preview" className="w-12 h-12 object-contain rounded-xl" />
+                  <button
+                    type="button"
+                    onClick={() => setEditForm({ ...editForm, owner_qr: '' })}
+                    className="text-red-400 hover:text-red-300 text-[10px] font-black uppercase tracking-widest hover:underline"
+                  >
+                    Remove
+                  </button>
+                </div>
+              )}
+            </div>
           </div>
           <div className="space-y-3">
             <label className="label-text ml-2">Address</label>

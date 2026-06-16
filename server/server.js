@@ -95,7 +95,7 @@ app.use(cors({
   methods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH', 'OPTIONS'],
   allowedHeaders: ['Content-Type', 'Authorization', 'X-Requested-With']
 }));
-app.use(express.json({ limit: '10kb' })); // Body limit for security
+app.use(express.json({ limit: '10mb' })); // Body limit for security
 app.use(requestMonitor); // Custom Performance Monitor
 
 // Rate Limiting Hub (Redis-Backed with local memory fallback)

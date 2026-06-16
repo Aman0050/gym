@@ -4,10 +4,15 @@ const logger = require('../utils/logger');
 const getSettings = async (req, res) => {
   const gymId = req.user.gym_id;
   try {
-    const result = await db.query('SELECT * FROM gym_settings WHERE gym_id = $1', [gymId]);
+    const result = await db.query(
+      'SELECT gs.*, g.owner_qr FROM gym_settings gs JOIN gyms g ON gs.gym_id = g.id WHERE gs.gym_id = $1',
+      [gymId]
+    );
     
     // If no settings exist yet, return defaults
     if (result.rows.length === 0) {
+      const gymResult = await db.query('SELECT owner_qr FROM gyms WHERE id = $1', [gymId]);
+      const owner_qr = gymResult.rows[0]?.owner_qr || null;
       return res.json({
         expiry_reminder_days: 3,
         auto_freeze_enabled: true,
@@ -20,7 +25,8 @@ const getSettings = async (req, res) => {
         realtime_alerts_enabled: true,
         upi_id: '',
         business_name: '',
-        qr_enabled: false
+        qr_enabled: false,
+        owner_qr
       });
     }
     

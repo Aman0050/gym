@@ -25,7 +25,7 @@ const Gyms = () => {
   const navigate = useNavigate();
 
   // Step 1 state
-  const [newGym, setNewGym] = useState({ name: '', phone: '', address: '', saas_valid_until: '' });
+  const [newGym, setNewGym] = useState({ name: '', phone: '', address: '', saas_valid_until: '', owner_qr: '' });
 
   // Step 2 state
   const [step, setStep] = useState(1);
@@ -121,11 +121,26 @@ const Gyms = () => {
     }
   };
 
+  const handleFileChange = (e) => {
+    const file = e.target.files[0];
+    if (file) {
+      if (file.size > 2 * 1024 * 1024) {
+        toast.error('File size must be less than 2MB');
+        return;
+      }
+      const reader = new FileReader();
+      reader.onloadend = () => {
+        setNewGym(prev => ({ ...prev, owner_qr: reader.result }));
+      };
+      reader.readAsDataURL(file);
+    }
+  };
+
   const closeModal = () => {
     setShowAddModal(false);
     setStep(1);
     setCreatedBranch(null);
-    setNewGym({ name: '', phone: '', address: '', saas_valid_until: '' });
+    setNewGym({ name: '', phone: '', address: '', saas_valid_until: '', owner_qr: '' });
     setGymIdInput('');
     setGymIdStatus(null);
     setPassword('');
@@ -349,6 +364,36 @@ const Gyms = () => {
                       value={newGym.address}
                       onChange={(e) => setNewGym({ ...newGym, address: e.target.value })}
                     />
+                  </div>
+                  <div className="space-y-3">
+                    <label className="label-text ml-2">Gym Owner QR Code (Optional)</label>
+                    <div className="flex items-center gap-4">
+                      <input
+                        type="file"
+                        accept="image/*"
+                        onChange={handleFileChange}
+                        className="hidden"
+                        id="owner-qr-upload"
+                      />
+                      <label
+                        htmlFor="owner-qr-upload"
+                        className="cursor-pointer px-5 py-3 bg-white/5 border border-white/10 hover:border-white/20 rounded-2xl text-xs font-semibold text-ivory hover:text-earth-clay transition-all select-none"
+                      >
+                        Choose QR Image
+                      </label>
+                      {newGym.owner_qr && (
+                        <div className="flex items-center gap-3 bg-white/[0.02] border border-white/5 p-2 rounded-2xl">
+                          <img src={newGym.owner_qr} alt="QR Preview" className="w-12 h-12 object-contain rounded-xl" />
+                          <button
+                            type="button"
+                            onClick={() => setNewGym({ ...newGym, owner_qr: '' })}
+                            className="text-red-400 hover:text-red-300 text-[10px] font-black uppercase tracking-widest hover:underline"
+                          >
+                            Remove
+                          </button>
+                        </div>
+                      )}
+                    </div>
                   </div>
                   <Input
                     label="Subscription Expiry (Optional)"

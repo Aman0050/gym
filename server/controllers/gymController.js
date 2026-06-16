@@ -38,12 +38,12 @@ const getGyms = async (req, res) => {
 };
 
 const createGym = async (req, res) => {
-  const { name, phone, address, saas_valid_until } = req.body;
+  const { name, phone, address, saas_valid_until, owner_qr } = req.body;
   try {
     const validUntil = saas_valid_until ? saas_valid_until : null;
     const result = await db.query(
-      'INSERT INTO gyms (name, phone, address, saas_valid_until) VALUES ($1, $2, $3, $4) RETURNING *',
-      [name, phone, address, validUntil]
+      'INSERT INTO gyms (name, phone, address, saas_valid_until, owner_qr) VALUES ($1, $2, $3, $4, $5) RETURNING *',
+      [name, phone, address, validUntil, owner_qr || null]
     );
     res.status(201).json(result.rows[0]);
   } catch (err) {
@@ -54,12 +54,12 @@ const createGym = async (req, res) => {
 
 const updateGym = async (req, res) => {
   const { id } = req.params;
-  const { name, phone, address, contact_person, login_id, password } = req.body;
+  const { name, phone, address, contact_person, login_id, password, owner_qr } = req.body;
   try {
     await db.query('BEGIN');
     const result = await db.query(
-      'UPDATE gyms SET name = COALESCE($1, name), phone = COALESCE($2, phone), address = COALESCE($3, address), contact_person = COALESCE($4, contact_person) WHERE id = $5 RETURNING *',
-      [name, phone, address, contact_person, id]
+      'UPDATE gyms SET name = COALESCE($1, name), phone = COALESCE($2, phone), address = COALESCE($3, address), contact_person = COALESCE($4, contact_person), owner_qr = CASE WHEN $5::boolean = true THEN $6 ELSE owner_qr END WHERE id = $7 RETURNING *',
+      [name, phone, address, contact_person, owner_qr !== undefined, owner_qr || null, id]
     );
     if (result.rows.length === 0) {
       await db.query('ROLLBACK');

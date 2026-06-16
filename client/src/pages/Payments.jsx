@@ -841,7 +841,7 @@ const Payments = () => {
                   </div>
 
                   {/* UPI QR Code */}
-                  {newPayment.paymentMethod === 'UPI' && gymSettings?.upi_id ? (
+                  {newPayment.paymentMethod === 'UPI' && (gymSettings?.upi_id || gymSettings?.owner_qr) ? (
                     <motion.div
                       initial={{ scale: 0.9, opacity: 0 }}
                       animate={{ scale: 1, opacity: 1 }}
@@ -849,15 +849,25 @@ const Payments = () => {
                       className="relative bg-[#080808]/90 border border-white/[0.06] rounded-[2rem] p-8 flex flex-col items-center justify-center shadow-[0_0_30px_rgba(194,106,56,0.04)] transition-all duration-300 hover:border-[#C26A38]/30 hover:shadow-[0_0_24px_rgba(194,106,56,0.08)]"
                     >
                       {/* QR wrapper */}
-                      <div className="relative mb-6">
-                        <div className="absolute -inset-3 rounded-2xl bg-earth-clay/10 blur-md" />
-                        <div className="relative bg-white p-3.5 rounded-2xl shadow-xl">
-                          <QRCodeSVG
-                            value={upiPayload}
-                            size={180}
-                            level="Q"
-                            includeMargin={false}
-                          />
+                      <div className="relative mb-6 flex justify-center w-full">
+                        <div className="absolute -inset-3 rounded-2xl bg-earth-clay/10 blur-md pointer-events-none" />
+                        <div className="relative bg-white p-2 rounded-2xl shadow-xl flex items-center justify-center max-w-[220px] w-full">
+                          {gymSettings?.owner_qr ? (
+                            <img
+                              src={gymSettings.owner_qr}
+                              alt="Gym Owner QR"
+                              className="w-full h-auto max-h-[280px] object-contain rounded-xl"
+                            />
+                          ) : (
+                            <div className="p-1.5">
+                              <QRCodeSVG
+                                value={upiPayload}
+                                size={180}
+                                level="Q"
+                                includeMargin={false}
+                              />
+                            </div>
+                          )}
                         </div>
                       </div>
 
@@ -867,7 +877,9 @@ const Payments = () => {
                           <span className="text-[#00D084]">₹</span>{Number(newPayment.amount).toLocaleString('en-IN')}
                         </p>
                         <p className="text-base font-bold text-earth-clay">{gymSettings.business_name || 'FITXENO GYM'}</p>
-                        <p className="text-sm text-slate-500 font-medium font-mono">{gymSettings.upi_id}</p>
+                        {gymSettings?.upi_id && (
+                          <p className="text-sm text-slate-500 font-medium font-mono">{gymSettings.upi_id}</p>
+                        )}
                       </div>
 
                       <div className="flex items-center gap-2 px-5 py-2.5 rounded-xl border border-amber-500/30 bg-amber-500/10">
