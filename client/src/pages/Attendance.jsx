@@ -48,13 +48,21 @@ const Attendance = () => {
 
   const handleCheckin = async (memberId) => {
     if (loading || isCheckingIn.current || !memberId) return;
+
+    const isUuid = /^[0-9a-fA-F-]{36}$/.test(memberId);
+    const normalizedPhone = memberId.toString().replace(/\D/g, '');
+
+    if (!isUuid && normalizedPhone.length !== 10) {
+      toast.error("Please enter a valid 10-digit mobile number.", { id: 'phone-validation' });
+      return;
+    }
     
     isCheckingIn.current = true;
     setLoading(true);
     setManualId(''); // Clear immediately to prevent double scan of same string
     
     try {
-      const res = await api.post('/attendance/check-in', { memberId });
+      const res = await api.post('/attendance/check-in', { memberId: isUuid ? memberId : normalizedPhone });
       if (navigator.vibrate) navigator.vibrate([10, 30, 10]);
       setLastCheckin(res.data);
       setResolutionData(null);
@@ -109,13 +117,13 @@ const Attendance = () => {
           <div className="text-center space-y-4 max-w-3xl mx-auto px-4">
             <div className="flex items-center justify-center gap-6 mb-2">
               <div className="w-12 h-px bg-earth-clay/30" />
-              <span className="label-text text-earth-clay tracking-[0.2em] font-black uppercase text-[10px]">Ready for member verification</span>
+              <span className="label-text text-earth-clay tracking-[0.2em] font-black uppercase text-xs">Ready for member verification</span>
               <div className="w-12 h-px bg-earth-clay/30" />
             </div>
             <h1 className="page-title text-ivory">
               Reception <span className="text-earth-clay italic">Console</span>
             </h1>
-            <p className="body-text opacity-60 max-w-[32rem] mx-auto text-sm leading-relaxed">
+            <p className="body-text opacity-65 max-w-[36rem] mx-auto text-base leading-relaxed">
               Verify member credentials, monitor check-in status, and manage access logs in real time.
             </p>
           </div>
@@ -128,8 +136,8 @@ const Attendance = () => {
           <div className="flex flex-col min-h-0">
             <Card variant="flat" className="p-6 lg:p-8 flex flex-col">
               <div>
-                <h2 className="text-lg font-black text-ivory flex items-center gap-2.5 mb-8">
-                  <Search className="text-earth-clay" size={20} />
+                <h2 className="text-2xl font-black text-ivory flex items-center gap-3 mb-8">
+                  <Search className="text-earth-clay" size={24} />
                   Manual Check-In
                 </h2>
 
@@ -137,10 +145,12 @@ const Attendance = () => {
                   <Input
                     ref={inputRef}
                     label="Member ID or Mobile Number"
+                    labelClassName="!text-xs sm:!text-sm tracking-[0.2em]"
                     placeholder="Enter member ID or mobile number..."
                     value={manualId}
                     onChange={(e) => setManualId(e.target.value)}
                     icon={ShieldCheck}
+                    className="!text-xl !py-5 !rounded-2xl"
                     onKeyDown={(e) => {
                       if (e.key === 'Enter' && manualId && !loading) handleCheckin(manualId);
                     }}
@@ -149,7 +159,7 @@ const Attendance = () => {
                     onClick={() => handleCheckin(manualId)}
                     disabled={loading || !manualId.trim()}
                     loading={loading}
-                    className="w-full h-14 !text-base !font-black !rounded-2xl shadow-xl shadow-earth-clay/10"
+                    className="w-full h-16 !text-lg !font-black !rounded-2xl shadow-xl shadow-earth-clay/10"
                     icon={UserCheck}
                   >
                     {loading ? 'Verifying Member...' : 'Verify & Check In'}
@@ -158,7 +168,7 @@ const Attendance = () => {
               </div>
 
               {/* Enterprise Status indicators */}
-              <div className="pt-6 border-t border-white/[0.05] mt-10 flex items-center justify-around text-[9px] font-black uppercase tracking-widest text-slate-500">
+              <div className="pt-6 border-t border-white/[0.05] mt-10 flex items-center justify-around text-xs font-black uppercase tracking-widest text-slate-400">
                 <div className="flex items-center gap-1.5">
                   <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse" />
                   <span className="text-emerald-400">Stable Link</span>
@@ -170,7 +180,7 @@ const Attendance = () => {
                 </div>
                 <div className="w-px h-3 bg-white/[0.08]" />
                 <div className="flex items-center gap-1.5">
-                  <CheckCircle2 size={10} className="text-emerald-400" />
+                  <CheckCircle2 size={13} className="text-emerald-400" />
                   <span className="text-emerald-400">Console Active</span>
                 </div>
               </div>
@@ -196,30 +206,30 @@ const Attendance = () => {
 
                   {/* Header Row */}
                   <div className="flex items-center justify-between pb-4 border-b border-white/[0.05] mb-6">
-                    <div className="flex items-center gap-3">
-                      <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" />
-                      <span className="text-[10px] font-black text-emerald-400 uppercase tracking-[0.25em]">
+                    <div className="flex items-center gap-3.5">
+                      <span className="w-2.5 h-2.5 rounded-full bg-emerald-500 animate-pulse" />
+                      <span className="text-xs font-black text-emerald-400 uppercase tracking-[0.25em]">
                         Live Verification Console
                       </span>
                     </div>
                     <div className="flex items-center gap-2">
-                      <StatusBadge status={lastCheckin.member?.status || lastCheckin.attendance?.status || 'ACTIVE'} />
+                      <StatusBadge status={lastCheckin.member?.status || lastCheckin.attendance?.status || 'ACTIVE'} className="!text-xs" />
                     </div>
                   </div>
 
                   {/* Center Profile Hub */}
                   <div className="flex flex-col items-center justify-center mb-6">
-                    <div className="relative w-24 h-24 rounded-full bg-white/[0.02] border border-white/[0.08] flex items-center justify-center text-earth-clay shadow-2xl relative overflow-hidden group-hover:scale-105 transition-transform duration-500">
+                    <div className="relative w-28 h-28 rounded-full bg-white/[0.02] border border-white/[0.08] flex items-center justify-center text-earth-clay shadow-2xl relative overflow-hidden group-hover:scale-105 transition-transform duration-500">
                       <div className="absolute inset-0 bg-gradient-to-tr from-emerald-500/10 to-transparent opacity-30 pointer-events-none" />
-                      <User size={36} className="text-earth-clay" />
+                      <User size={44} className="text-earth-clay" />
                       <div className="absolute inset-0 rounded-full border border-emerald-500/20 animate-ping opacity-25" />
                     </div>
 
                     {/* Member Name */}
-                    <h3 className="text-2xl lg:text-3xl font-black text-ivory tracking-tight leading-none text-center mt-5 mb-2.5">
+                    <h3 className="text-3xl lg:text-4xl font-black text-ivory tracking-tight leading-none text-center mt-5 mb-2.5">
                       {lastCheckin.member?.name || lastCheckin.attendance?.name}
                     </h3>
-                    <p className="text-[10px] font-mono font-bold text-slate-500 uppercase tracking-widest leading-none">
+                    <p className="text-xs font-mono font-bold text-slate-400 uppercase tracking-widest leading-none">
                       Member ID: {(lastCheckin.member?.id || lastCheckin.attendance?.member_id || lastCheckin.attendance?.id || '1000').substring(0, 8).toUpperCase()}
                     </p>
                   </div>
@@ -230,17 +240,17 @@ const Attendance = () => {
                     {/* Row 1: Plan Details */}
                     <div className="flex items-center justify-between p-4 bg-white/[0.02] border border-white/[0.05] rounded-2xl">
                       <div className="flex items-center gap-3.5">
-                        <div className="w-10 h-10 bg-white/[0.03] border border-white/[0.06] rounded-xl flex items-center justify-center text-earth-clay shadow-inner flex-shrink-0">
-                          <Award size={18} />
+                        <div className="w-12 h-12 bg-white/[0.03] border border-white/[0.06] rounded-xl flex items-center justify-center text-earth-clay shadow-inner flex-shrink-0">
+                          <Award size={20} />
                         </div>
                         <div>
-                          <p className="text-[8px] font-black text-slate-500 uppercase tracking-widest mb-0.5">Membership Plan</p>
-                          <h4 className="text-[13px] font-black text-ivory tracking-tight">
+                          <p className="text-[10px] font-black text-slate-500 uppercase tracking-widest mb-0.5">Membership Plan</p>
+                          <h4 className="text-base font-black text-ivory tracking-tight">
                             {lastCheckin.member?.plan_name || lastCheckin.attendance?.plan_name || lastCheckin.member?.planName || 'Gym Membership'}
                           </h4>
                         </div>
                       </div>
-                      <span className="text-[10px] font-black text-slate-400 uppercase tracking-wider">
+                      <span className="text-xs font-black text-slate-400 uppercase tracking-wider">
                         {lastCheckin.member?.plan_duration || lastCheckin.attendance?.plan_duration || 'Active Plan'}
                       </span>
                     </div>
@@ -248,12 +258,12 @@ const Attendance = () => {
                     {/* Row 2: Validity */}
                     <div className="flex items-center justify-between p-4 bg-white/[0.02] border border-white/[0.05] rounded-2xl">
                       <div className="flex items-center gap-3.5">
-                        <div className="w-10 h-10 bg-white/[0.03] border border-white/[0.06] rounded-xl flex items-center justify-center text-earth-clay shadow-inner flex-shrink-0">
-                          <Calendar size={18} />
+                        <div className="w-12 h-12 bg-white/[0.03] border border-white/[0.06] rounded-xl flex items-center justify-center text-earth-clay shadow-inner flex-shrink-0">
+                          <Calendar size={20} />
                         </div>
                         <div>
-                          <p className="text-[8px] font-black text-slate-500 uppercase tracking-widest mb-0.5">Membership Validity</p>
-                          <div className="flex items-center gap-1.5 text-[12px] font-black text-ivory">
+                          <p className="text-[10px] font-black text-slate-500 uppercase tracking-widest mb-0.5">Membership Validity</p>
+                          <div className="flex items-center gap-1.5 text-sm font-black text-ivory">
                             <span className="text-slate-400">
                               {lastCheckin.member?.valid_from || lastCheckin.attendance?.valid_from
                                 ? new Date(lastCheckin.member?.valid_from || lastCheckin.attendance?.valid_from).toLocaleDateString('en-IN', { day: 'numeric', month: 'short' })
@@ -275,12 +285,12 @@ const Attendance = () => {
                     {/* Row 3: Check-in Time */}
                     <div className="flex items-center justify-between p-4 bg-white/[0.02] border border-white/[0.05] rounded-2xl">
                       <div className="flex items-center gap-3.5">
-                        <div className="w-10 h-10 bg-white/[0.03] border border-white/[0.06] rounded-xl flex items-center justify-center text-earth-clay shadow-inner flex-shrink-0">
-                          <Clock size={18} />
+                        <div className="w-12 h-12 bg-white/[0.03] border border-white/[0.06] rounded-xl flex items-center justify-center text-earth-clay shadow-inner flex-shrink-0">
+                          <Clock size={20} />
                         </div>
                         <div>
-                          <p className="text-[8px] font-black text-slate-500 uppercase tracking-widest mb-0.5">Check-in Timestamp</p>
-                          <h4 className="text-[13px] font-black text-emerald-400 tracking-tight">
+                          <p className="text-[10px] font-black text-slate-500 uppercase tracking-widest mb-0.5">Check-in Timestamp</p>
+                          <h4 className="text-base font-black text-emerald-400 tracking-tight">
                             {lastCheckin.attendance?.check_in_time 
                               ? new Date(lastCheckin.attendance.check_in_time).toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit', second: '2-digit' })
                               : new Date().toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit', second: '2-digit' })
@@ -288,7 +298,7 @@ const Attendance = () => {
                           </h4>
                         </div>
                       </div>
-                      <span className="text-[10px] font-black text-slate-400 uppercase tracking-widest">
+                      <span className="text-xs font-black text-slate-400 uppercase tracking-widest">
                         Verified
                       </span>
                     </div>
@@ -296,9 +306,9 @@ const Attendance = () => {
                   </div>
 
                   {/* Bottom Meta Status Bar */}
-                  <div className="flex items-center justify-between pt-6 border-t border-white/[0.05] text-[9px] font-black uppercase tracking-widest text-slate-500">
+                  <div className="flex items-center justify-between pt-6 border-t border-white/[0.05] text-xs font-black uppercase tracking-widest text-slate-400">
                     <div className="flex items-center gap-2">
-                      <Clock size={12} className="text-earth-clay" />
+                      <Clock size={14} className="text-earth-clay" />
                       <span>Recorded Live</span>
                     </div>
                     <div className="flex items-center gap-1.5 text-emerald-400">
@@ -322,40 +332,40 @@ const Attendance = () => {
 
                   {/* Header */}
                   <div className="w-full flex items-center justify-between pb-4 border-b border-white/[0.05] mb-6">
-                    <div className="flex items-center gap-2.5">
-                      <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" />
-                      <span className="text-[10px] font-black text-emerald-400 tracking-[0.25em] uppercase">
+                    <div className="flex items-center gap-3">
+                      <span className="w-2.5 h-2.5 rounded-full bg-emerald-500 animate-pulse" />
+                      <span className="text-xs font-black text-emerald-400 tracking-[0.25em] uppercase">
                         Live Verification Console
                       </span>
                     </div>
-                    <span className="text-[8px] bg-white/[0.04] border border-white/[0.08] px-2.5 py-1 rounded-full font-black text-slate-400 uppercase tracking-widest">
+                    <span className="text-[10px] bg-white/[0.04] border border-white/[0.08] px-2.5 py-1 rounded-full font-black text-slate-400 uppercase tracking-widest">
                       Ready
                     </span>
                   </div>
 
                   {/* Center Radar Icon */}
                   <div className="w-full flex flex-col items-center justify-center my-auto space-y-6">
-                    <div className="relative w-28 h-28 rounded-full bg-white/[0.02] border border-white/[0.06] flex items-center justify-center text-slate-500 relative overflow-hidden shadow-2xl">
-                      <Activity size={36} className="text-earth-clay animate-pulse" />
+                    <div className="relative w-32 h-32 rounded-full bg-white/[0.02] border border-white/[0.06] flex items-center justify-center text-slate-500 relative overflow-hidden shadow-2xl">
+                      <Activity size={44} className="text-earth-clay animate-pulse" />
                       <div className="absolute inset-0 rounded-full border border-earth-clay/20 animate-ping opacity-15" />
                     </div>
                     
                     <div className="w-full space-y-2">
-                      <h4 className="text-xl font-black text-ivory tracking-tight">
+                      <h4 className="text-2xl font-black text-ivory tracking-tight">
                         Reception Console Ready
                       </h4>
-                      <p className="text-xs text-slate-400 font-semibold max-w-[20rem] leading-relaxed mx-auto">
+                      <p className="text-sm text-slate-400 font-semibold max-w-[24rem] leading-relaxed mx-auto">
                         Enter a member ID or mobile number to begin attendance verification.
                       </p>
                     </div>
 
-                    <span className="text-[9px] bg-earth-clay/10 border border-earth-clay/20 text-earth-clay px-3 py-1 rounded-full font-black uppercase tracking-widest">
+                    <span className="text-xs bg-earth-clay/10 border border-earth-clay/20 text-earth-clay px-3 py-1.5 rounded-full font-black uppercase tracking-widest">
                       Awaiting Member Verification
                     </span>
                   </div>
 
                   {/* Footer status indicator */}
-                  <div className="w-full flex items-center justify-center gap-2 text-[9px] font-black uppercase tracking-widest text-slate-600 pt-4 border-t border-white/[0.05]">
+                  <div className="w-full flex items-center justify-center gap-2 text-xs font-black uppercase tracking-widest text-slate-500 pt-4 border-t border-white/[0.05]">
                     <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse" />
                     <span>Station Listening on Real-Time Channels</span>
                   </div>
@@ -374,50 +384,50 @@ const Attendance = () => {
         onClose={() => setResolutionData(null)}
         title="Check-In Resolution"
         subtitle="Membership Status Intervention Required"
-        maxWidth="max-w-xl"
+        maxWidth="max-w-4xl"
       >
         {resolutionData && (
           <div className="space-y-8">
             {/* 1. Member Profile Preview */}
-            <div className="flex items-center gap-6 p-6 bg-white/[0.03] border border-white/[0.06] rounded-[2.5rem] relative overflow-hidden group">
+            <div className="flex items-center gap-6 p-7 bg-white/[0.03] border border-white/[0.06] rounded-[2.5rem] relative overflow-hidden group">
               <div className="absolute inset-0 bg-gradient-to-br from-amber-500/5 to-transparent opacity-0 group-hover:opacity-100 transition-opacity" />
-              <div className="w-20 h-20 bg-white/[0.05] border border-white/[0.08] rounded-[1.8rem] flex items-center justify-center text-earth-clay shadow-xl">
-                <User size={32} />
+              <div className="w-28 h-28 bg-white/[0.05] border border-white/[0.08] rounded-[2rem] flex items-center justify-center text-earth-clay shadow-xl flex-shrink-0">
+                <User size={44} />
               </div>
               <div className="flex-1">
-                <h4 className="text-xl font-black text-ivory tracking-tight">{resolutionData.name}</h4>
-                <div className="flex items-center gap-2 mt-1.5 opacity-60">
-                  <ShieldCheck size={11} className="text-earth-clay" />
-                  <p className="text-[9px] font-black uppercase tracking-widest text-slate-400">ID: {resolutionData.id.slice(0, 8).toUpperCase()}</p>
+                <h4 className="text-3xl font-black text-ivory tracking-tight">{resolutionData.name}</h4>
+                <div className="flex items-center gap-2 mt-2 opacity-65">
+                  <ShieldCheck size={14} className="text-earth-clay" />
+                  <p className="text-xs font-black uppercase tracking-widest text-slate-400">ID: {resolutionData.id.slice(0, 8).toUpperCase()}</p>
                 </div>
                 <div className="mt-3">
-                  <StatusBadge status={resolutionData.status} />
+                  <StatusBadge status={resolutionData.status} className="!text-xs" />
                 </div>
               </div>
             </div>
 
             {/* 2. Intelligent Messaging */}
-            <div className="p-6 rounded-[2rem] bg-amber-500/5 border border-amber-500/10 flex items-start gap-4 shadow-inner">
-              <div className={`w-10 h-10 rounded-xl flex items-center justify-center flex-shrink-0 mt-1 ${
+            <div className="p-8 rounded-[2rem] bg-amber-500/5 border border-amber-500/10 flex items-start gap-6 shadow-inner">
+              <div className={`w-14 h-14 rounded-xl flex items-center justify-center flex-shrink-0 mt-0.5 ${
                 resolutionData.blockCode === 'PAYMENT_PENDING'
                   ? 'bg-orange-500/10 text-orange-400'
                   : 'bg-amber-500/10 text-amber-500'
               }`}>
                 {resolutionData.blockCode === 'PAYMENT_PENDING'
-                  ? <CreditCard size={20} />
-                  : <Snowflake size={20} />}
+                  ? <CreditCard size={28} />
+                  : <Snowflake size={28} />}
               </div>
               <div>
-                <p className={`text-[11px] font-black uppercase tracking-widest mb-1.5 ${
+                <p className={`text-sm font-black uppercase tracking-widest mb-2.5 ${
                   resolutionData.blockCode === 'PAYMENT_PENDING' ? 'text-orange-400' : 'text-amber-500'
                 }`}>Action Required</p>
-                <p className="text-sm font-semibold text-slate-300 leading-relaxed">
+                <p className="text-lg font-bold text-slate-200 leading-relaxed">
                   {typeof resolutionData.error === 'string'
                     ? resolutionData.error
                     : 'Check-in unavailable until membership is reactivated.'}
                 </p>
                 {resolutionData.freeze_notes && (
-                  <p className="mt-2 p-3 bg-black/20 rounded-xl text-[10px] text-slate-500 font-medium border border-white/5 italic">
+                  <p className="mt-3 p-4 bg-black/20 rounded-xl text-sm text-slate-500 font-medium border border-white/5 italic">
                     Note: {resolutionData.freeze_notes}
                   </p>
                 )}
@@ -425,40 +435,40 @@ const Attendance = () => {
             </div>
 
             {/* 3. Deep Metadata Grid */}
-            <div className="grid grid-cols-2 gap-5">
-              <div className="aura-glass p-5 rounded-2xl border-white/[0.04]">
-                <div className="flex items-center gap-2 mb-3">
-                  <Activity size={13} className="text-earth-clay" />
-                  <p className="text-[9px] font-black uppercase tracking-widest text-slate-500">Membership</p>
+            <div className="grid grid-cols-2 gap-6">
+              <div className="aura-glass p-7 rounded-2xl border-white/[0.04]">
+                <div className="flex items-center gap-2.5 mb-3.5">
+                  <Activity size={18} className="text-earth-clay" />
+                  <p className="text-sm font-black uppercase tracking-widest text-slate-500">Membership</p>
                 </div>
-                <p className="text-sm font-black text-ivory">{resolutionData.planName}</p>
-                <div className="mt-2 flex items-center gap-2">
-                  <Calendar size={10} className="text-slate-600" />
-                  <p className="text-[10px] font-bold text-slate-500">Ends {new Date(resolutionData.validUntil).toLocaleDateString()}</p>
+                <p className="text-lg font-black text-ivory">{resolutionData.planName}</p>
+                <div className="mt-2.5 flex items-center gap-2">
+                  <Calendar size={14} className="text-slate-600" />
+                  <p className="text-sm font-bold text-slate-500">Ends {new Date(resolutionData.validUntil).toLocaleDateString()}</p>
                 </div>
               </div>
 
-              <div className="aura-glass p-5 rounded-2xl border-white/[0.04]">
-                <div className="flex items-center gap-2 mb-3">
-                  <CreditCard size={13} className="text-earth-clay" />
-                  <p className="text-[9px] font-black uppercase tracking-widest text-slate-500">Financial Status</p>
+              <div className="aura-glass p-7 rounded-2xl border-white/[0.04]">
+                <div className="flex items-center gap-2.5 mb-3.5">
+                  <CreditCard size={18} className="text-earth-clay" />
+                  <p className="text-sm font-black uppercase tracking-widest text-slate-500">Financial Status</p>
                 </div>
                 <div className="flex items-center gap-1">
-                  <IndianRupee size={12} className="text-emerald-400" />
-                  <p className="text-sm font-black text-emerald-400">{resolutionData.lastAmount || '0.00'}</p>
+                  <IndianRupee size={18} className="text-emerald-400" />
+                  <p className="text-lg font-black text-emerald-400">{resolutionData.lastAmount || '0.00'}</p>
                 </div>
-                <p className="text-[10px] font-bold text-slate-600 mt-1">Last: {resolutionData.lastPaymentDate ? new Date(resolutionData.lastPaymentDate).toLocaleDateString() : 'None'}</p>
+                <p className="text-sm font-bold text-slate-600 mt-1">Last: {resolutionData.lastPaymentDate ? new Date(resolutionData.lastPaymentDate).toLocaleDateString() : 'None'}</p>
               </div>
             </div>
 
             {/* 4. Operational Actions */}
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 pt-2">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 pt-3">
               {resolutionData.blockCode === 'PAYMENT_PENDING' ? (
                 <Button
                   variant="primary"
                   onClick={() => { setResolutionData(null); navigate('/payments'); }}
                   icon={CreditCard}
-                  className="w-full !bg-orange-600 hover:!bg-orange-700"
+                  className="w-full !bg-orange-600 hover:!bg-orange-700 !text-sm !py-4 !h-14 !rounded-2xl"
                 >
                   Confirm Payment
                 </Button>
@@ -468,7 +478,7 @@ const Attendance = () => {
                   onClick={handleReactivate}
                   loading={isResolving}
                   icon={Sun}
-                  className="w-full !bg-amber-600 hover:!bg-amber-700"
+                  className="w-full !bg-amber-600 hover:!bg-amber-700 !text-sm !py-4 !h-14 !rounded-2xl"
                 >
                   Reactivate Instantly
                 </Button>
@@ -477,7 +487,7 @@ const Attendance = () => {
                   variant="primary" 
                   onClick={() => { setResolutionData(null); navigate('/payments'); }}
                   icon={CreditCard}
-                  className="w-full"
+                  className="w-full !text-sm !py-4 !h-14 !rounded-2xl"
                 >
                   Process Renewal
                 </Button>
@@ -486,7 +496,7 @@ const Attendance = () => {
                 variant="secondary" 
                 onClick={() => { setResolutionData(null); navigate(`/members/profile/${resolutionData.id}`); }}
                 icon={ExternalLink}
-                className="w-full"
+                className="w-full !text-sm !py-4 !h-14 !rounded-2xl"
               >
                 Full Profile
               </Button>

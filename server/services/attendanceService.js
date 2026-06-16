@@ -5,19 +5,17 @@ const notificationService = require('./notificationService');
 
 const recordAttendance = async (memberId, gymId) => {
   const isUuid = /^[0-9a-fA-F-]{36}$/.test(memberId);
-  const cleanInput = memberId.toString().replace(/[^0-9]/g, '');
-  const phoneSuffix = cleanInput.length >= 10 ? `%${cleanInput.slice(-10)}` : null;
 
   let targetFilter = '';
-  let params = [memberId, gymId];
+  let params = [];
 
   if (isUuid) {
     targetFilter = 'id = $1::uuid AND gym_id = $2';
-  } else if (phoneSuffix) {
-    targetFilter = '(phone = $1 OR phone LIKE $3) AND gym_id = $2';
-    params.push(phoneSuffix);
+    params = [memberId, gymId];
   } else {
-    targetFilter = 'phone = $1 AND gym_id = $2';
+    const normalizedPhone = memberId.toString().replace(/\D/g, '').slice(-10);
+    targetFilter = "right(regexp_replace(phone, '\\D', '', 'g'), 10) = $1 AND gym_id = $2";
+    params = [normalizedPhone, gymId];
   }
 
   const result = await db.query(

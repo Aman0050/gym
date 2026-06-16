@@ -74,10 +74,10 @@ Card.displayName = 'Card';
  * High-End Wellness Input
  * ─────────────────────────────────────────
  */
-export const Input = memo(({ label, icon: Icon, action, error, className = '', ...props }) => (
+export const Input = memo(({ label, labelClassName = '', icon: Icon, action, error, className = '', ...props }) => (
   <div className="space-y-2.5 w-full">
     {label && (
-      <label className="label-text ml-1 block">
+      <label className={`label-text ml-1 block ${labelClassName}`}>
         {label}
       </label>
     )}
@@ -168,7 +168,8 @@ export const Modal = memo(({
   subtitle, 
   children, 
   maxWidth = 'max-w-xl',
-  variant = 'default' 
+  variant = 'default',
+  bodyClassName = ''
 }) => {
   const widthStyles = {
     'max-w-xs': { maxWidth: '320px' },
@@ -220,12 +221,12 @@ export const Modal = memo(({
                     <ArrowLeft size={16} className="group-hover:-translate-x-1 transition-transform duration-300" />
                   </button>
                 )}
-                <div className="space-y-1">
-                  <h3 className={`text-lg font-black tracking-tight leading-tight ${variant === 'destructive' ? 'text-red-400' : 'text-ivory'}`}>
+                <div className="space-y-1.5">
+                  <h3 className={`text-2xl font-black tracking-tight leading-tight ${variant === 'destructive' ? 'text-red-400' : 'text-ivory'}`}>
                     {title}
                   </h3>
                   {subtitle && (
-                    <p className="text-[10px] text-slate-500 font-black uppercase tracking-[0.2em]">
+                    <p className="text-sm text-slate-500 font-black uppercase tracking-[0.2em]">
                       {subtitle}
                     </p>
                   )}
@@ -240,8 +241,8 @@ export const Modal = memo(({
               </button>
             </div>
             {/* Modal Body */}
-            <div className="px-5 sm:px-8 pt-5 sm:pt-8 overflow-y-auto premium-scrollbar flex-1">
-              <div className="pb-8">
+            <div className={`px-5 sm:px-8 pt-5 sm:pt-8 overflow-y-auto premium-scrollbar flex-1 w-full ${bodyClassName}`}>
+              <div className="pb-8 w-full">
                 {children}
               </div>
             </div>
@@ -285,7 +286,7 @@ PriorityBadge.displayName = 'PriorityBadge';
  * Enterprise Status Badge System
  * ─────────────────────────────────────────
  */
-export const StatusBadge = memo(({ status }) => {
+export const StatusBadge = memo(({ status, className = '' }) => {
   const styles = {
     ACTIVE:    'bg-[rgba(46,204,113,0.12)] text-[#2ECC71] border-[rgba(46,204,113,0.3)]',
     FROZEN:    'bg-sky-500/10 text-sky-400 border-sky-500/20',
@@ -300,9 +301,9 @@ export const StatusBadge = memo(({ status }) => {
 
   return (
     <span
-      className={`inline-flex items-center justify-center px-2.5 py-1 rounded-md text-[9px] font-bold uppercase tracking-wider border backdrop-blur-sm ${
+      className={`inline-flex items-center justify-center px-2.5 py-1 rounded-md text-[10px] font-bold uppercase tracking-wider border backdrop-blur-sm ${
         styles[status] || styles.SYSTEM
-      }`}
+      } ${className}`}
     >
       <span className="w-1.5 h-1.5 rounded-full bg-current mr-2 opacity-80 shadow-[0_0_8px_currentColor]" />
       {status}
