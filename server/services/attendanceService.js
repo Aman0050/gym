@@ -27,7 +27,7 @@ const recordAttendance = async (memberId, gymId) => {
        LIMIT 1
      ),
      last_payment AS (
-       SELECT DISTINCT ON (member_id) member_id, valid_until, payment_date as last_payment_date, amount, plan_id
+       SELECT DISTINCT ON (member_id) member_id, valid_from, valid_until, payment_date as last_payment_date, amount, plan_id
        FROM payments 
        WHERE member_id IN (SELECT id FROM target_member) AND gym_id = $2
        ORDER BY member_id, valid_until DESC
@@ -51,7 +51,7 @@ const recordAttendance = async (memberId, gymId) => {
      )
      SELECT 
        tm.*,
-       lp.valid_until, lp.last_payment_date, lp.amount as last_amount, lp.plan_id,
+       lp.valid_from, lp.valid_until, lp.last_payment_date, lp.amount as last_amount, lp.plan_id,
        p.name as plan_name,
        asum.monthly_visits, asum.prev_visit, asum.history,
        sc.streak
