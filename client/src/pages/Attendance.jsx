@@ -264,9 +264,9 @@ const Attendance = () => {
                         <div>
                           <p className="text-[10px] font-black text-slate-500 uppercase tracking-widest mb-0.5">Membership Validity</p>
                           <div className="flex items-center gap-1.5 text-sm font-black text-ivory">
-                            <span className="text-slate-400">
+                            <span className="text-earth-clay">
                               {lastCheckin.member?.valid_from || lastCheckin.attendance?.valid_from
-                                ? new Date(lastCheckin.member?.valid_from || lastCheckin.attendance?.valid_from).toLocaleDateString('en-IN', { day: 'numeric', month: 'short' })
+                                ? new Date(lastCheckin.member?.valid_from || lastCheckin.attendance?.valid_from).toLocaleDateString('en-IN', { day: 'numeric', month: 'short', year: 'numeric' })
                                 : 'N/A'
                               }
                             </span>
