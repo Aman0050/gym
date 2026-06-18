@@ -34,6 +34,7 @@ const getDashboardStats = async (req, res) => {
         LEFT JOIN payments p ON p.gym_id = $1 
           AND p.payment_date >= months.m 
           AND p.payment_date < months.m + interval '1 month'
+          AND (p.payment_status IS NULL OR p.payment_status = 'PAID')
         GROUP BY months.m
         ORDER BY months.m ASC
       `;
@@ -67,6 +68,7 @@ const getDashboardStats = async (req, res) => {
         LEFT JOIN payments p ON p.gym_id = $1 
           AND p.payment_date >= dates.d 
           AND p.payment_date < dates.d + interval '1 day'
+          AND (p.payment_status IS NULL OR p.payment_status = 'PAID')
         GROUP BY dates.d
         ORDER BY dates.d ASC
       `;
@@ -101,6 +103,7 @@ const getDashboardStats = async (req, res) => {
         LEFT JOIN payments p ON p.gym_id = $1 
           AND p.payment_date >= dates.d 
           AND p.payment_date < dates.d + interval '1 day'
+          AND (p.payment_status IS NULL OR p.payment_status = 'PAID')
         GROUP BY dates.d
         ORDER BY dates.d ASC
       `;

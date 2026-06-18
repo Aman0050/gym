@@ -278,7 +278,7 @@ const getGymDetails = async (req, res) => {
       SELECT 
         COALESCE(SUM(amount), 0) as total_revenue,
         COALESCE(SUM(CASE WHEN payment_date >= date_trunc('month', CURRENT_DATE) THEN amount ELSE 0 END), 0) as monthly_revenue
-      FROM payments WHERE gym_id = $1
+      FROM payments WHERE gym_id = $1 AND (payment_status IS NULL OR payment_status = 'PAID')
     `, [id]);
     const revenueStats = revenueRes.rows[0];
 

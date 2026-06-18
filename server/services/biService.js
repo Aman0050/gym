@@ -27,7 +27,7 @@ const getKPISummary = async (gymId) => {
                     AND payment_date < date_trunc('month', CURRENT_DATE) THEN amount ELSE 0 END) as last_month,
            COUNT(CASE WHEN pricing_type = 'CUSTOM' THEN 1 END) as custom_count,
            SUM(original_price - amount) as total_discounts
-         FROM payments WHERE gym_id = $1
+         FROM payments WHERE gym_id = $1 AND (payment_status IS NULL OR payment_status = 'PAID')
        ),
        attendance_stats AS (
          SELECT 
