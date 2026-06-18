@@ -4,7 +4,7 @@ import toast from 'react-hot-toast';
 import { useSyncStore } from '../store/useSyncStore';
 
 const api = axios.create({
-  baseURL: import.meta.env.VITE_API_URL || 'http://localhost:5000/api',
+  baseURL: import.meta.env.VITE_API_URL,
   timeout: 15000, // 15s hard timeout — prevents indefinite hangs
 });
 

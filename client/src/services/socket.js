@@ -2,7 +2,7 @@ import { io } from 'socket.io-client';
 import { useSocketStore } from '../store/useSocketStore';
 import toast from 'react-hot-toast';
 
-const SOCKET_URL = import.meta.env.VITE_API_URL?.replace('/api', '') || 'http://localhost:5000';
+const SOCKET_URL = import.meta.env.VITE_API_URL?.replace('/api', '');
 
 class SocketService {
   socket = null;
