@@ -109,7 +109,7 @@ const Attendance = () => {
   };
 
   return (
-    <PageTransition className="flex flex-col lg:h-[calc(100vh-7rem)] lg:overflow-hidden">
+    <PageTransition className="flex flex-col lg:h-[calc(100vh-7rem)] overflow-y-auto overflow-x-hidden">
       <div className="max-w-7xl w-full mx-auto flex flex-col flex-1 min-h-0 pt-2 lg:pt-4 pb-4">
 
         {/* ── Page Header ── */}
@@ -198,7 +198,7 @@ const Attendance = () => {
                   animate={{ opacity: 1, scale: 1, y: 0 }}
                   exit={{ opacity: 0, scale: 0.97, y: -10 }}
                   transition={{ duration: 0.4, ease: [0.22, 1, 0.36, 1] }}
-                  className="aura-glass p-6 lg:p-8 border border-emerald-500/15 bg-emerald-500/[0.01] shadow-2xl rounded-[2.5rem] relative overflow-hidden flex flex-col justify-between h-full min-h-0 group"
+                  className="aura-glass p-5 lg:p-6 border border-emerald-500/15 bg-emerald-500/[0.01] shadow-2xl rounded-[2rem] relative overflow-hidden flex flex-col justify-between h-full min-h-0 group"
                 >
                   {/* Atmospheric Glow Backdrops */}
                   <div className="absolute top-0 right-0 w-80 h-80 bg-emerald-500/5 blur-[120px] rounded-full pointer-events-none" />
@@ -218,15 +218,15 @@ const Attendance = () => {
                   </div>
 
                   {/* Center Profile Hub */}
-                  <div className="flex flex-col items-center justify-center mb-6">
-                    <div className="relative w-28 h-28 rounded-full bg-white/[0.02] border border-white/[0.08] flex items-center justify-center text-earth-clay shadow-2xl relative overflow-hidden group-hover:scale-105 transition-transform duration-500">
+                  <div className="flex flex-col items-center justify-center mb-4">
+                    <div className="relative w-24 h-24 rounded-full bg-white/[0.02] border border-white/[0.08] flex items-center justify-center text-earth-clay shadow-2xl relative overflow-hidden group-hover:scale-105 transition-transform duration-500">
                       <div className="absolute inset-0 bg-gradient-to-tr from-emerald-500/10 to-transparent opacity-30 pointer-events-none" />
-                      <User size={44} className="text-earth-clay" />
+                      <User size={40} className="text-earth-clay" />
                       <div className="absolute inset-0 rounded-full border border-emerald-500/20 animate-ping opacity-25" />
                     </div>
 
                     {/* Member Name */}
-                    <h3 className="text-3xl lg:text-4xl font-black text-ivory tracking-tight leading-none text-center mt-5 mb-2.5">
+                    <h3 className="text-2xl lg:text-3xl font-black text-ivory tracking-tight leading-none text-center mt-4 mb-2">
                       {lastCheckin.member?.name || lastCheckin.attendance?.name}
                     </h3>
                     <p className="text-xs font-mono font-bold text-slate-400 uppercase tracking-widest leading-none">
@@ -235,13 +235,13 @@ const Attendance = () => {
                   </div>
 
                   {/* Metadata Rows */}
-                  <div className="space-y-4 mb-6">
+                  <div className="space-y-3 mb-4">
                     
                     {/* Row 1: Plan Details */}
-                    <div className="flex items-center justify-between p-4 bg-white/[0.02] border border-white/[0.05] rounded-2xl">
-                      <div className="flex items-center gap-3.5">
-                        <div className="w-12 h-12 bg-white/[0.03] border border-white/[0.06] rounded-xl flex items-center justify-center text-earth-clay shadow-inner flex-shrink-0">
-                          <Award size={20} />
+                    <div className="flex items-center justify-between p-3.5 bg-white/[0.02] border border-white/[0.05] rounded-2xl">
+                      <div className="flex items-center gap-3">
+                        <div className="w-10 h-10 bg-white/[0.03] border border-white/[0.06] rounded-xl flex items-center justify-center text-earth-clay shadow-inner flex-shrink-0">
+                          <Award size={18} />
                         </div>
                         <div>
                           <p className="text-[10px] font-black text-slate-500 uppercase tracking-widest mb-0.5">Membership Plan</p>
@@ -256,10 +256,10 @@ const Attendance = () => {
                     </div>
 
                     {/* Row 2: Validity */}
-                    <div className="flex items-center justify-between p-4 bg-white/[0.02] border border-white/[0.05] rounded-2xl">
-                      <div className="flex items-center gap-3.5">
-                        <div className="w-12 h-12 bg-white/[0.03] border border-white/[0.06] rounded-xl flex items-center justify-center text-earth-clay shadow-inner flex-shrink-0">
-                          <Calendar size={20} />
+                    <div className="flex items-center justify-between p-3.5 bg-white/[0.02] border border-white/[0.05] rounded-2xl">
+                      <div className="flex items-center gap-3">
+                        <div className="w-10 h-10 bg-white/[0.03] border border-white/[0.06] rounded-xl flex items-center justify-center text-earth-clay shadow-inner flex-shrink-0">
+                          <Calendar size={18} />
                         </div>
                         <div>
                           <p className="text-[10px] font-black text-slate-500 uppercase tracking-widest mb-0.5">Membership Validity</p>
@@ -283,10 +283,10 @@ const Attendance = () => {
                     </div>
 
                     {/* Row 3: Check-in Time */}
-                    <div className="flex items-center justify-between p-4 bg-white/[0.02] border border-white/[0.05] rounded-2xl">
-                      <div className="flex items-center gap-3.5">
-                        <div className="w-12 h-12 bg-white/[0.03] border border-white/[0.06] rounded-xl flex items-center justify-center text-earth-clay shadow-inner flex-shrink-0">
-                          <Clock size={20} />
+                    <div className="flex items-center justify-between p-3.5 bg-white/[0.02] border border-white/[0.05] rounded-2xl">
+                      <div className="flex items-center gap-3">
+                        <div className="w-10 h-10 bg-white/[0.03] border border-white/[0.06] rounded-xl flex items-center justify-center text-earth-clay shadow-inner flex-shrink-0">
+                          <Clock size={18} />
                         </div>
                         <div>
                           <p className="text-[10px] font-black text-slate-500 uppercase tracking-widest mb-0.5">Check-in Timestamp</p>
