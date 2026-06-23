@@ -96,6 +96,8 @@ const buildMemberReportData = (rawMembers) => {
     'Member Name':          sanitize(m['Full Name'], 'Not Available'),
     'Member ID':            sanitize(m['Member ID']),
     'Contact Number':       formatPhone(m['Phone Number']),
+    'Slip Number':          sanitize(m['Slip Number']),
+    'Aadhaar Number':       sanitize(m['Aadhaar Number'], ''),
     'Membership Status':    sanitize(m['Status']),
     'Membership Start Date':formatDate(m['Join Date']),
     'Membership Expiry Date':formatDate(m['Expiry Date']),
@@ -210,6 +212,7 @@ const buildXLSXWorkbook = (cleanMembers, meta) => {
   // ── Row 8: Column Headers ──────────────────────────────────────────────────
   const headers = Object.keys(cleanMembers[0] || {
     'Member Name': '', 'Member ID': '', 'Contact Number': '',
+    'Slip Number': '', 'Aadhaar Number': '',
     'Membership Status': '', 'Membership Start Date': '',
     'Membership Expiry Date': '', 'Active Plan': '', 'Last Payment Amount': ''
   });

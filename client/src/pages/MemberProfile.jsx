@@ -3,7 +3,7 @@ import { useParams, useNavigate } from 'react-router-dom';
 import api from '../services/api';
 import { motion } from 'framer-motion';
 import {
-  User, Phone, Calendar, Activity,
+  User, Phone, Calendar, Activity, Hash,
   ChevronLeft, Snowflake, Sun, ShieldCheck,
   TrendingUp, History, CreditCard, AlertCircle,
   MessageSquare, LayoutGrid
@@ -183,8 +183,8 @@ const MemberProfile = () => {
                   {[
                     { label: 'Phone',      value: profile.phone,                    icon: Phone },
                     { label: 'Joined',     value: new Date(profile.join_date).toLocaleDateString('en-IN', { day: 'numeric', month: 'long', year: 'numeric' }), icon: Calendar },
-                    { label: 'Blood Group', value: profile.blood_group || '—',      icon: Activity, accent: true },
-                    { label: 'Emergency',  value: profile.emergency_contact || '—', icon: Phone },
+                    { label: 'Slip Number', value: profile.slip_number || '—',      icon: Hash },
+                    { label: 'Aadhaar No.', value: profile.aadhaar_number || '—', icon: ShieldCheck },
                   ].map(({ label, value, icon: Icon, accent }) => (
                     <div key={label} className="flex items-center justify-between gap-4">
                       <div className="flex items-center gap-2.5 flex-shrink-0">

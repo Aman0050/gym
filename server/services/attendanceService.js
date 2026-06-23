@@ -4,18 +4,24 @@ const { eventBus, EVENTS } = require('../events/eventBus');
 const notificationService = require('./notificationService');
 
 const recordAttendance = async (memberId, gymId) => {
-  const isUuid = /^[0-9a-fA-F-]{36}$/.test(memberId);
+  const inputStr = String(memberId).trim();
+  const isUuid = /^[0-9a-fA-F-]{36}$/.test(inputStr);
 
   let targetFilter = '';
   let params = [];
 
   if (isUuid) {
     targetFilter = 'id = $1::uuid AND gym_id = $2';
-    params = [memberId, gymId];
+    params = [inputStr, gymId];
   } else {
-    const normalizedPhone = memberId.toString().replace(/\D/g, '').slice(-10);
-    targetFilter = "right(regexp_replace(phone, '\\D', '', 'g'), 10) = $1 AND gym_id = $2";
-    params = [normalizedPhone, gymId];
+    const normalizedPhone = inputStr.replace(/\D/g, '').slice(-10);
+    if (normalizedPhone.length === 10) {
+      targetFilter = "(right(regexp_replace(phone, '\\D', '', 'g'), 10) = $1 OR slip_number ILIKE $3) AND gym_id = $2";
+      params = [normalizedPhone, gymId, inputStr];
+    } else {
+      targetFilter = "slip_number ILIKE $1 AND gym_id = $2";
+      params = [inputStr, gymId];
+    }
   }
 
   const result = await db.query(

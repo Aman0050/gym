@@ -25,6 +25,14 @@ const SupportTicketDetails = lazy(() => import('./pages/SupportTicketDetails'));
 const PrivacyPolicy = lazy(() => import('./pages/legal/PrivacyPolicy'));
 const TermsOfService = lazy(() => import('./pages/legal/TermsOfService'));
 const RefundPolicy = lazy(() => import('./pages/legal/RefundPolicy'));
+
+// Operations Hub
+const OperationsOverview = lazy(() => import('./pages/operations/OperationsOverview'));
+const StaffPayroll = lazy(() => import('./pages/operations/StaffPayroll'));
+const Expenses = lazy(() => import('./pages/expenses/Expenses'));
+const Inventory = lazy(() => import('./pages/inventory/Inventory'));
+const Assets = lazy(() => import('./pages/assets/Assets'));
+const Maintenance = lazy(() => import('./pages/maintenance/Maintenance'));
 import CommandPalette from './components/ui/CommandPalette';
 import GlobalSocketListener from './components/GlobalSocketListener';
 
@@ -64,6 +72,20 @@ function App() {
             <Route path="/payments"              element={<Payments />} />
             <Route path="/attendance"            element={<Attendance />} />
             <Route path="/gyms"                  element={<Gyms />} />
+
+            {/* Operations Hub routes */}
+            <Route path="/operations"            element={<OperationsOverview />} />
+            <Route path="/operations/expenses"   element={<Expenses />} />
+            <Route path="/operations/inventory"  element={<Inventory />} />
+            <Route path="/operations/assets"     element={<Assets />} />
+            <Route path="/operations/maintenance" element={<Maintenance />} />
+            <Route path="/operations/staff"      element={<StaffPayroll />} />
+
+            {/* Legacy Operations Hub redirects */}
+            <Route path="/expenses"              element={<Navigate to="/operations/expenses" replace />} />
+            <Route path="/inventory"             element={<Navigate to="/operations/inventory" replace />} />
+            <Route path="/assets"                element={<Navigate to="/operations/assets" replace />} />
+            <Route path="/maintenance"           element={<Navigate to="/operations/maintenance" replace />} />
           </Route>
         </Routes>
       </Suspense>

@@ -4,7 +4,8 @@ import {
   LayoutDashboard, Users, CreditCard,
   Calendar, Settings, Shield, Zap,
   BarChart3, Bell, HelpCircle,
-  Building2, X, LifeBuoy, ServerCrash, Activity
+  Building2, X, LifeBuoy, ServerCrash, Activity,
+  Receipt, Package, Dumbbell, Wrench, Briefcase
 } from 'lucide-react';
 import logo from '../assets/logo-fitxeno.svg';
 import lionIcon from '../assets/flaming-lion.png';
@@ -21,6 +22,14 @@ const Sidebar = ({ onNotificationsClick, onSettingsClick, onHelpClick, isOpen, o
   const navigate = useNavigate();
   const location = useLocation();
   const isSuperAdmin = user?.role === 'SUPER_ADMIN';
+
+  const [isOpsExpanded, setIsOpsExpanded] = useState(location.pathname.startsWith('/operations'));
+
+  useEffect(() => {
+    if (location.pathname.startsWith('/operations')) {
+      setIsOpsExpanded(true);
+    }
+  }, [location.pathname]);
 
   const [healthStatus, setHealthStatus] = useState({
     status: 'OPERATIONAL',
@@ -180,40 +189,50 @@ const Sidebar = ({ onNotificationsClick, onSettingsClick, onHelpClick, isOpen, o
             );
           })}
         </div>
+
+        {!isSuperAdmin && (
+          <div className="mt-8">
+            <div className="space-y-1">
+              <NavLink
+                to="/operations/expenses"
+                onClick={() => isMobile && onClose()}
+                className={({ isActive }) => `
+                  group flex items-center px-4 py-3.5 rounded-2xl
+                  transition-colors duration-200 relative overflow-hidden
+                  ${isActive
+                    ? 'bg-earth-clay/10 text-earth-clay'
+                    : 'text-slate-500 hover:text-slate-200 hover:bg-white/[0.04]'
+                  }
+                `}
+              >
+                {({ isActive }) => (
+                  <>
+                    {isActive && (
+                      <motion.div
+                        layoutId="sidebar-indicator-ops"
+                        className="absolute left-0 top-2 bottom-2 w-0.5 bg-earth-clay rounded-r-full shadow-[0_0_12px_rgba(160,82,45,0.8)]"
+                      />
+                    )}
+                    <Receipt
+                      size={17}
+                      className={`mr-3.5 flex-shrink-0 transition-transform duration-300 ${
+                        isActive ? '' : 'group-hover:scale-105 group-hover:text-earth-clay'
+                      }`}
+                    />
+                    <span className="text-[11px] font-black uppercase tracking-[0.2em]">
+                      Expenses
+                    </span>
+                  </>
+                )}
+              </NavLink>
+            </div>
+          </div>
+        )}
       </nav>
 
       {/* ── Footer ── */}
       <div className="p-5 space-y-5 flex-shrink-0">
-        {/* System Status */}
-        <div className={`p-5 bg-white/[0.02] rounded-3xl border border-${healthStatus.color}/10 group cursor-default hover:border-${healthStatus.color}/30 transition-all duration-300 relative overflow-hidden`}>
-          {healthStatus.status === 'OFFLINE' && <div className="absolute inset-0 bg-red-500/5 animate-pulse" />}
-          <div className="flex items-center justify-between mb-3.5 relative z-10">
-            <div className="flex items-center gap-2">
-              <span className={`w-1.5 h-1.5 rounded-full bg-${healthStatus.bgColor} ${healthStatus.status === 'OPERATIONAL' ? 'animate-pulse' : ''}`} />
-              <span className="text-[9px] font-black text-slate-400 uppercase tracking-widest">
-                SYSTEM STATUS
-              </span>
-            </div>
-            <span className={`text-[9px] font-black text-${healthStatus.color} uppercase tracking-wider whitespace-nowrap`}>
-              {healthStatus.status}
-            </span>
-          </div>
-          <p className={`text-[9px] font-bold ${healthStatus.status === 'OFFLINE' ? 'text-red-400' : 'text-slate-500'} uppercase tracking-wider mb-3 leading-none relative z-10`}>
-            {healthStatus.message}
-          </p>
-          <div className="w-full h-1 bg-white/[0.05] rounded-full overflow-hidden relative z-10">
-            <motion.div
-              initial={{ width: 0 }}
-              animate={{ width: `${healthStatus.uptimePct}%` }}
-              transition={{ duration: 1, ease: "easeOut" }}
-              className={`h-full bg-${healthStatus.color} shadow-[0_0_8px_currentColor]`}
-            />
-          </div>
-          <div className="flex items-center justify-between mt-3 text-[8px] font-black text-slate-600 uppercase tracking-widest relative z-10">
-            <span>{healthStatus.uptimePct}% Operational</span>
-            <span>v5.0 Enterprise</span>
-          </div>
-        </div>
+
 
         {/* Action Buttons */}
         <div className="flex items-center justify-around">

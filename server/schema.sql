@@ -45,6 +45,8 @@ CREATE TABLE IF NOT EXISTS members (
     phone VARCHAR(20) NOT NULL,
     emergency_contact VARCHAR(20),
     blood_group VARCHAR(5),
+    slip_number VARCHAR(100),
+    aadhaar_number VARCHAR(12),
     join_date DATE NOT NULL DEFAULT CURRENT_DATE,
     created_at TIMESTAMPTZ DEFAULT NOW(),
     updated_at TIMESTAMPTZ DEFAULT NOW(),

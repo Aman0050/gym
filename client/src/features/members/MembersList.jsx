@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import {
   Search, Plus, User, Phone, Calendar,
-  Download, Activity, Trash2, Edit2, AlertCircle,
+  Download, Activity, Trash2, Edit2, AlertCircle, Hash,
   Database, UserCheck, Users, CreditCard, RotateCcw,
   ChevronLeft, ChevronRight, Zap, Check
 } from 'lucide-react';
@@ -47,8 +47,8 @@ const MembersList = () => {
   const [newMember, setNewMember] = useState({
     name: '',
     phone: '',
-    emergency_contact: '',
-    blood_group: '',
+    slip_number: '',
+    aadhaar_number: '',
   });
 
   useEffect(() => {
@@ -118,7 +118,7 @@ const MembersList = () => {
     onSuccess: () => {
       toast.success('Member enrolled successfully');
       setShowAddModal(false);
-      setNewMember({ name: '', phone: '', emergency_contact: '', blood_group: '' });
+      setNewMember({ name: '', phone: '', slip_number: '', aadhaar_number: '' });
     },
     onSettled: () => {
       queryClient.invalidateQueries({ queryKey: ['members'] });
@@ -127,8 +127,12 @@ const MembersList = () => {
 
   const handleAddMember = (e) => {
     e.preventDefault();
-    if (!newMember.name.trim() || !newMember.phone.trim()) {
-      toast.error('Name and phone number are required');
+    if (!newMember.name.trim() || !newMember.phone.trim() || !newMember.slip_number.trim()) {
+      toast.error('Name, phone number, and slip number are required');
+      return;
+    }
+    if (newMember.aadhaar_number && newMember.aadhaar_number.length !== 12) {
+      toast.error('Aadhaar number must be exactly 12 digits');
       return;
     }
     enrollMutation.mutate(newMember);
@@ -204,7 +208,7 @@ const MembersList = () => {
             <div className="w-full sm:w-80 lg:w-96 relative group">
               <Input
                 icon={Search}
-                placeholder="Search by name or phone..."
+                placeholder="Search by name, phone or slip number..."
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
                 className="!py-4.5 text-sm w-full bg-white/5 border-white/10 hover:border-white/20 text-white placeholder:text-slate-400"
@@ -391,7 +395,7 @@ const MembersList = () => {
         {/* ── Enrollment Modal ── */}
         <Modal
           isOpen={showAddModal}
-          onClose={() => { setShowAddModal(false); setNewMember({ name: '', phone: '', emergency_contact: '', blood_group: '' }); }}
+          onClose={() => { setShowAddModal(false); setNewMember({ name: '', phone: '', slip_number: '', aadhaar_number: '' }); }}
           title="Register New Member"
           subtitle="Enterprise Fast-Enrollment System"
           maxWidth="max-w-xl"
@@ -448,22 +452,23 @@ const MembersList = () => {
                   )}
                 </div>
                 <Input
-                  label="Blood Group"
-                  placeholder="O+ / AB-"
-                  icon={Activity}
-                  value={newMember.blood_group}
-                  onChange={(e) => setNewMember({ ...newMember, blood_group: e.target.value.toUpperCase().replace(/[^A-BO+-]/g, '').substring(0, 3) })}
-                  className="!py-4 font-black uppercase tracking-widest text-center"
+                  label="SLIP NUMBER"
+                  placeholder="Enter Slip Number"
+                  icon={Hash}
+                  required
+                  value={newMember.slip_number}
+                  onChange={(e) => setNewMember({ ...newMember, slip_number: e.target.value })}
+                  className="!py-4 font-medium tracking-wide"
                 />
               </div>
 
               <Input
-                label="Emergency Contact"
-                placeholder="Name / Phone Number"
+                label="AADHAAR NUMBER (OPTIONAL)"
+                placeholder="Enter Aadhaar Number"
                 icon={AlertCircle}
-                value={newMember.emergency_contact}
-                onChange={(e) => setNewMember({ ...newMember, emergency_contact: e.target.value })}
-                className="!py-4"
+                value={newMember.aadhaar_number}
+                onChange={(e) => setNewMember({ ...newMember, aadhaar_number: e.target.value.replace(/[^0-9]/g, '').substring(0, 12) })}
+                className="!py-4 tracking-widest"
               />
             </div>
 

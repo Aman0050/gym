@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { User, Phone, Activity, AlertCircle, Save } from 'lucide-react';
+import { User, Phone, Activity, AlertCircle, Save, Hash } from 'lucide-react';
 import { Modal, Input, Select, Button, PriorityBadge } from '../../components/ui';
 import api from '../../services/api';
 import toast from 'react-hot-toast';
@@ -10,8 +10,8 @@ const EditMemberModal = ({ isOpen, onClose, member }) => {
   const [formData, setFormData] = useState({
     name: '',
     phone: '',
-    emergency_contact: '',
-    blood_group: '',
+    slip_number: '',
+    aadhaar_number: '',
     status: 'ACTIVE'
   });
 
@@ -21,8 +21,8 @@ const EditMemberModal = ({ isOpen, onClose, member }) => {
       setFormData({
         name: member.name || '',
         phone: member.phone || '',
-        emergency_contact: member.emergency_contact || '',
-        blood_group: member.blood_group || '',
+        slip_number: member.slip_number || '',
+        aadhaar_number: member.aadhaar_number || '',
         status: member.status || 'ACTIVE'
       });
     }
@@ -46,7 +46,11 @@ const EditMemberModal = ({ isOpen, onClose, member }) => {
   const handleSubmit = (e) => {
     e.preventDefault();
     if (!formData.name.trim() || !formData.phone.trim()) {
-      toast.error('Name and Phone are required');
+      toast.error('Name, Phone and Slip Number are required');
+      return;
+    }
+    if (formData.aadhaar_number && formData.aadhaar_number.length !== 12) {
+      toast.error('Aadhaar number must be exactly 12 digits');
       return;
     }
     updateMutation.mutate(formData);
@@ -72,8 +76,8 @@ const EditMemberModal = ({ isOpen, onClose, member }) => {
   const hasChanges = member && (
     formData.name !== (member.name || '') ||
     formData.phone !== (member.phone || '') ||
-    formData.emergency_contact !== (member.emergency_contact || '') ||
-    formData.blood_group !== (member.blood_group || '') ||
+    formData.slip_number !== (member.slip_number || '') ||
+    formData.aadhaar_number !== (member.aadhaar_number || '') ||
     formData.status !== (member.status || 'ACTIVE')
   );
 
@@ -108,22 +112,23 @@ const EditMemberModal = ({ isOpen, onClose, member }) => {
               className="!py-4 font-medium tracking-wide text-ivory"
             />
             <Input
-              label="Blood Group"
-              icon={Activity}
-              value={formData.blood_group}
-              onChange={(e) => setFormData({ ...formData, blood_group: e.target.value.toUpperCase().replace(/[^A-BO+-]/g, '').substring(0, 3) })}
-              placeholder="O+"
-              className="!py-4 font-black uppercase tracking-widest text-center text-earth-clay"
+              label="SLIP NUMBER"
+              icon={Hash}
+              required
+              value={formData.slip_number}
+              onChange={(e) => setFormData({ ...formData, slip_number: e.target.value })}
+              placeholder="Enter Slip Number"
+              className="!py-4 font-medium tracking-wide text-ivory"
             />
           </div>
 
           <Input
-            label="Emergency Contact"
+            label="AADHAAR NUMBER (OPTIONAL)"
             icon={AlertCircle}
-            value={formData.emergency_contact}
-            onChange={(e) => setFormData({ ...formData, emergency_contact: e.target.value })}
-            placeholder="Name & Phone"
-            className="!py-4 text-ivory font-medium"
+            value={formData.aadhaar_number}
+            onChange={(e) => setFormData({ ...formData, aadhaar_number: e.target.value.replace(/[^0-9]/g, '').substring(0, 12) })}
+            placeholder="Enter Aadhaar Number"
+            className="!py-4 text-ivory font-medium tracking-widest"
           />
 
           <Select

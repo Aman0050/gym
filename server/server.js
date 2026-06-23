@@ -183,6 +183,7 @@ if (process.env.NODE_ENV === 'development') {
 }
 
 // 5. API Routes
+app.use('/uploads', express.static(require('path').join(__dirname, 'uploads')));
 app.use('/api/auth', require('./routes/authRoutes'));
 app.use('/api/plans', require('./routes/planRoutes'));
 app.use('/api/members', require('./routes/memberRoutes'));
@@ -198,6 +199,14 @@ app.use('/api/notifications', require('./routes/notificationRoutes'));
 app.use('/api/settings', require('./routes/settingsRoutes'));
 app.use('/api/admin/backups', require('./routes/backupRoutes'));
 app.use('/api/admin/exports', require('./routes/exportRoutes'));
+
+// Expense & Operations Management Module Routes
+app.use('/api/expenses', require('./routes/expenseRoutes'));
+app.use('/api/inventory', require('./routes/inventoryRoutes'));
+app.use('/api/assets', require('./routes/assetRoutes'));
+app.use('/api/maintenance', require('./routes/maintenanceRoutes'));
+app.use('/api/operations/reports', require('./routes/operationsReportRoutes'));
+app.use('/api/staff', require('./routes/staffRoutes'));
 
 
 // 6. Operational Health Hub

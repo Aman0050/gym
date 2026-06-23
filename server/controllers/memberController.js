@@ -19,7 +19,7 @@ const getMembers = async (req, res) => {
     const params = [gymId];
 
     if (search) {
-      whereClause += ` AND (m.name ILIKE $${params.length + 1} OR m.phone ILIKE $${params.length + 1})`;
+      whereClause += ` AND (m.name ILIKE $${params.length + 1} OR m.phone ILIKE $${params.length + 1} OR m.slip_number ILIKE $${params.length + 1})`;
       params.push(`%${search}%`);
     }
 
@@ -64,7 +64,7 @@ const getMembers = async (req, res) => {
 };
 
 const createMember = async (req, res) => {
-  const { name, phone, emergency_contact, blood_group } = req.body;
+  const { name, phone, slip_number, aadhaar_number } = req.body;
   const gymId = req.user.gym_id;
 
   if (!name || typeof name !== 'string' || name.trim() === '') {
@@ -76,8 +76,8 @@ const createMember = async (req, res) => {
 
   try {
     const resMember = await db.query(
-      'INSERT INTO members (name, phone, emergency_contact, blood_group, gym_id) VALUES ($1, $2, $3, $4, $5) RETURNING *',
-      [name, phone, emergency_contact, blood_group, gymId]
+      'INSERT INTO members (name, phone, slip_number, aadhaar_number, gym_id) VALUES ($1, $2, $3, $4, $5) RETURNING *',
+      [name, phone, slip_number, aadhaar_number, gymId]
     );
 
     // Emit Event
@@ -86,6 +86,9 @@ const createMember = async (req, res) => {
 
     res.status(201).json(resMember.rows[0]);
   } catch (err) {
+    if (err.code === '23505') {
+      return res.status(400).json({ error: 'A member with this phone number or details already exists.' });
+    }
     logger.error('Create member error:', err);
     res.status(500).json({ error: 'Failed to create member' });
   }
@@ -235,6 +238,8 @@ const exportMembers = async (req, res) => {
         m.name        AS "Full Name",
         m.id          AS "Member ID",
         m.phone       AS "Phone Number",
+        m.slip_number AS "Slip Number",
+        m.aadhaar_number AS "Aadhaar Number",
         m.status      AS "Status",
         m.join_date   AS "Join Date",
         p.valid_until AS "Expiry Date",
@@ -300,6 +305,8 @@ const exportMembers = async (req, res) => {
         'Member Name':            'No records matched the selected filters',
         'Member ID':              '—',
         'Contact Number':         '—',
+        'Slip Number':            '—',
+        'Aadhaar Number':         '—',
         'Membership Status':      '—',
         'Membership Start Date':  '—',
         'Membership Expiry Date': '—',
@@ -410,7 +417,7 @@ const bulkAction = async (req, res) => {
 
 const updateMember = async (req, res) => {
   const { id } = req.params;
-  const { name, phone, emergency_contact, blood_group, status } = req.body;
+  const { name, phone, slip_number, aadhaar_number, status } = req.body;
   const gymId = req.user.gym_id;
 
   try {
@@ -418,12 +425,12 @@ const updateMember = async (req, res) => {
       `UPDATE members 
        SET name = COALESCE($1, name), 
            phone = COALESCE($2, phone), 
-           emergency_contact = COALESCE($3, emergency_contact), 
-           blood_group = COALESCE($4, blood_group), 
+           slip_number = COALESCE($3, slip_number), 
+           aadhaar_number = COALESCE($4, aadhaar_number), 
            status = COALESCE($5, status)
        WHERE id = $6 AND gym_id = $7
        RETURNING *`,
-      [name, phone, emergency_contact, blood_group, status, id, gymId]
+      [name, phone, slip_number, aadhaar_number, status, id, gymId]
     );
 
     if (result.rows.length === 0) {
@@ -438,6 +445,9 @@ const updateMember = async (req, res) => {
 
     res.json({ message: 'Member updated successfully', member: result.rows[0] });
   } catch (err) {
+    if (err.code === '23505') {
+      return res.status(400).json({ error: 'A member with this phone number or details already exists.' });
+    }
     logger.error('Update member error:', err);
     res.status(500).json({ error: 'Failed to update member' });
   }

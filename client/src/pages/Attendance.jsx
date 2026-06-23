@@ -49,20 +49,12 @@ const Attendance = () => {
   const handleCheckin = async (memberId) => {
     if (loading || isCheckingIn.current || !memberId) return;
 
-    const isUuid = /^[0-9a-fA-F-]{36}$/.test(memberId);
-    const normalizedPhone = memberId.toString().replace(/\D/g, '');
-
-    if (!isUuid && normalizedPhone.length !== 10) {
-      toast.error("Please enter a valid 10-digit mobile number.", { id: 'phone-validation' });
-      return;
-    }
-    
     isCheckingIn.current = true;
     setLoading(true);
     setManualId(''); // Clear immediately to prevent double scan of same string
     
     try {
-      const res = await api.post('/attendance/check-in', { memberId: isUuid ? memberId : normalizedPhone });
+      const res = await api.post('/attendance/check-in', { memberId: memberId.trim() });
       if (navigator.vibrate) navigator.vibrate([10, 30, 10]);
       setLastCheckin(res.data);
       setResolutionData(null);
@@ -144,9 +136,9 @@ const Attendance = () => {
                 <div className="space-y-6">
                   <Input
                     ref={inputRef}
-                    label="Member ID or Mobile Number"
+                    label="Slip Number or Mobile Number"
                     labelClassName="!text-xs sm:!text-sm tracking-[0.2em]"
-                    placeholder="Enter member ID or mobile number..."
+                    placeholder="Enter slip number or mobile number..."
                     value={manualId}
                     onChange={(e) => setManualId(e.target.value)}
                     icon={ShieldCheck}
@@ -355,7 +347,7 @@ const Attendance = () => {
                         Reception Console Ready
                       </h4>
                       <p className="text-sm text-slate-400 font-semibold max-w-[24rem] leading-relaxed mx-auto">
-                        Enter a member ID or mobile number to begin attendance verification.
+                        Enter a slip number or mobile number to begin attendance verification.
                       </p>
                     </div>
 
